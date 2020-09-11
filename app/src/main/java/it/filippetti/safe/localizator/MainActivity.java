@@ -84,17 +84,17 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
             }
         });
     }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-
-
-        switch(requestCode) {
-
-            case 1337+3:
-              System.out.println("oooks");
-                break;
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//
+//
+//        switch(requestCode) {
+//
+//            case 1337+3:
+//              System.out.println("oooks");
+//                break;
+//        }
+//    }
 
 
     private void showDataFromBackground(MainActivity mainActivity, ServiceResultReceiver mResultReceiver) {
