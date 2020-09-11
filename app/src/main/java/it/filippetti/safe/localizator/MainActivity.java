@@ -1,6 +1,8 @@
 package it.filippetti.safe.localizator;
 
+import android.Manifest;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -17,6 +19,7 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 
+import it.filippetti.safe.localizator.locator.RSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.mqtt.MQTTService;
 
 import static it.filippetti.safe.localizator.mqtt.MQTTService.SHOW_RESULT;
@@ -25,6 +28,10 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
 
     private ServiceResultReceiver mServiceResultReceiver;
     private TextView mTextView;
+
+    private static final String[] LOCATION_PERMS={
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +57,25 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
         buttonMQTT.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 System.out.println("Button MQTT Clicked");
-                // Start MQTT
-                MQTTService.enqueueNewWork(getApplicationContext(), mServiceResultReceiver, MQTTService.START_MQTT);
-                // Start Location GPS
-                Intent startServiceIntent = new Intent(getApplicationContext(), SmartSetupService.class);
-                startService(startServiceIntent);
 
+                ServiceResultReceiver deviceDataResultReceiver = new ServiceResultReceiver(new Handler());
+                final RSSIDeviceLocatorImpl rssiDeviceLocator = new RSSIDeviceLocatorImpl();
+                deviceDataResultReceiver.setReceiver(rssiDeviceLocator);
+                MQTTService.enqueueNewWork(getApplicationContext(), deviceDataResultReceiver, MQTTService.START_MQTT);
+
+                // Start Location GPS
+               // requestPermissions(LOCATION_PERMS, 1337+3);
+                Intent startServiceIntent = new Intent(getApplicationContext(), SmartSetupService.class);
+                ServiceResultReceiver locationDataResultReceiver = new ServiceResultReceiver(new Handler());
+                locationDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
+                    @Override
+                    public void onReceiveResult(int resultCode, Bundle resultData) {
+                        resultData.getString("lon_lat");
+                        rssiDeviceLocator.onNewLocation(null, null);
+                    }
+                });
+                startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
+                startService(startServiceIntent);
 //                Intent intent = new Intent(getApplicationContext(), MQTTService.class);
 //                //intent.putExtra(MQTTService.START_MQTT, mServiceResultReceiver);
 //                intent.setAction(MQTTService.START_MQTT);
@@ -64,6 +84,18 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
             }
         });
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+
+
+        switch(requestCode) {
+
+            case 1337+3:
+              System.out.println("oooks");
+                break;
+        }
+    }
+
 
     private void showDataFromBackground(MainActivity mainActivity, ServiceResultReceiver mResultReceiver) {
         MQTTService.enqueueWork(mainActivity, mResultReceiver);

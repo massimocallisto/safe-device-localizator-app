@@ -1,5 +1,6 @@
 package it.filippetti.safe.localizator.locator;
 
+import android.location.Location;
 import android.os.Bundle;
 
 import java.util.ArrayList;
@@ -8,13 +9,25 @@ import java.util.Comparator;
 import java.util.List;
 
 import it.filippetti.safe.localizator.ServiceResultReceiver;
+import it.filippetti.safe.localizator.SmartSetupService;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 
 import static it.filippetti.safe.localizator.mqtt.MQTTService.SHOW_RESULT;
 
-public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultReceiver.Receiver{
+public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultReceiver.Receiver, LocationReceiver{
+    Location lastKnowLocation;
     // TODO: to improve with cach look-up data structure
     private List<DeviceIoT> deviceList;
+
+    public SmartSetupService getLocationProvider() {
+        return locationProvider;
+    }
+
+    public void setLocationProvider(SmartSetupService locationProvider) {
+        this.locationProvider = locationProvider;
+    }
+
+    private SmartSetupService locationProvider;
 
     public RSSIDeviceLocatorImpl() {
         this.deviceList = new ArrayList<>();
@@ -77,6 +90,7 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultRe
     @Override
     public void onReceiveResult(int resultCode, Bundle resultData) {
         // New Data
+        System.out.println("New IoT data!");
         switch (resultCode) {
             case SHOW_RESULT:
                 if (resultData != null) {
@@ -85,5 +99,13 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultRe
                 }
                 break;
         }
+    }
+
+
+
+    @Override
+    public void onNewLocation(Double lat, Double lon) {
+        //lastKnowLocation = location;
+        System.out.println("New Location!");
     }
 }

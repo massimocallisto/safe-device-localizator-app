@@ -8,15 +8,21 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcelable;
+import android.os.ResultReceiver;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import it.filippetti.safe.localizator.locator.LocationReceiver;
 
 public class SmartSetupService extends Service {
 
-    private LocalBroadcastManager localBroadcast;
+    //private LocalBroadcastManager localBroadcast;
     private LocationListener locationListener;
     private LocationManager locationManager;
+    private ResultReceiver locationReceiver;
 
     public SmartSetupService() { }
 
@@ -26,8 +32,15 @@ public class SmartSetupService extends Service {
     @Override
     public void onCreate() {
         Log.d("SmartSetupService", "onCreate");
-        localBroadcast = LocalBroadcastManager.getInstance(this);
+        //localBroadcast = LocalBroadcastManager.getInstance(this);
         startAcquiringLocation();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        System.out.println("ionStartCommand SmartSetup");
+        locationReceiver  = intent.getParcelableExtra("location_receiver");
+        return super.onStartCommand(intent, flags, startId);
     }
 
     private void startAcquiringLocation(){
@@ -40,9 +53,11 @@ public class SmartSetupService extends Service {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);  //requestLocationUpdates(0, 5, criteria, pi);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);  //requestLocationUpdates(0, 5, criteria, pi);
         } catch (SecurityException ignored) {
+            System.err.println("Error loading location info handler");
             //sendMessage("Cannot acquire location", null);
         }
     }
+
 
     private void stopAcquiringLocation(){
         Log.d("SmartSetupService", "stopAcquiringLocation");
@@ -66,14 +81,24 @@ public class SmartSetupService extends Service {
         super.onDestroy();
     }
 
-    private void sendLocation(Location location){
+    public void updateLocation(Location location){
+        if(location != null && locationReceiver != null) {
+            Log.d("sample", "sample");
+            Bundle bundle = new Bundle();
+            bundle.putString("lon_lat",String.format("Showing From JobIntent Service %d", 100));
+            locationReceiver.send(0, bundle);
+        }
+        //    locationReceiver.onNewLocation(location);
+    }
+
+    /*private void sendLocation(Location location){
         Log.d("SmartSetupService", "sendLocation");
         Intent intent = new Intent("LocationUpdate");
         if(location != null) {
             intent.putExtra("location", location);
         }
         localBroadcast.sendBroadcast(intent);
-    }
+    }*/
 
    /* private void sendMessage(String txt, Location location){
         Intent intent = new Intent("displayMessage");
@@ -88,7 +113,7 @@ public class SmartSetupService extends Service {
 
         @Override
         public void onLocationChanged(Location location) {
-            sendLocation( location );
+            updateLocation( location );
         }
 
         @Override
@@ -103,7 +128,7 @@ public class SmartSetupService extends Service {
         @Override
         public void onProviderDisabled(String provider) {
            // stopAcquiringLocation();
-            sendLocation( null );
+           // sendLocation( null );
         }
     }
 }
