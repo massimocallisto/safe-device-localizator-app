@@ -1,23 +1,27 @@
 package it.filippetti.safe.localizator.locator;
 
+import android.app.Application;
 import android.location.Location;
-import android.os.Bundle;
+import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import it.filippetti.safe.localizator.ServiceResultReceiver;
+import it.filippetti.safe.localizator.App;
 import it.filippetti.safe.localizator.SmartSetupService;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 
-import static it.filippetti.safe.localizator.mqtt.MQTTService.SHOW_RESULT;
-
-public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultReceiver.Receiver, LocationReceiver{
+public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResultReceiver.Receiver, LocationReceiver*/{
     Location lastKnowLocation;
     // TODO: to improve with cach look-up data structure
     private List<DeviceIoT> deviceList;
+    private Application applicationContext;
 
     public SmartSetupService getLocationProvider() {
         return locationProvider;
@@ -29,21 +33,39 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultRe
 
     private SmartSetupService locationProvider;
 
-    public RSSIDeviceLocatorImpl() {
+    public RSSIDeviceLocatorImpl(Application application) {
+        this.applicationContext = application;
         this.deviceList = new ArrayList<>();
     }
 
-    @Override
+    /*@Override
     public boolean addDevice(DeviceIoT deviceIoT) {
         DeviceIoT device = getDeviceIoT(deviceIoT.getName());
         if(device == null){
             return deviceList.add(deviceIoT);
         }
         return false;
+    }*/
+
+    @Override
+    public void addOrUpdateDevice(DeviceIoT deviceIoT) {
+        Log.i("addOrUpdateDevice", "Add or update device " + deviceIoT.getName());
+        Log.d("addOrUpdateDevice", deviceIoT.toString());
+
+        for(int i = 0; i < deviceList.size(); i++){
+            if(deviceList.get(i).getName().equals(deviceIoT.getName())){
+                Log.d("addOrUpdateDevice", "Device " + deviceIoT.getName() + " found at index " + i);
+                deviceList.set(i, deviceIoT);
+                return;
+            }
+        }
+        // not found, add new one
+        Log.d("addOrUpdateDevice", "Device " + deviceIoT.getName() + " not found!");
+        deviceList.add(deviceIoT);
     }
 
     @Override
-    public void updateRSS(DeviceIoT deviceIoT, Double rssi) {
+    public void updateRSSI(DeviceIoT deviceIoT, Double rssi) {
         DeviceIoT device = getDeviceIoT(deviceIoT.getName());
         if(device != null){
             device.setPower(rssi);
@@ -87,25 +109,35 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator, ServiceResultRe
         return deviceList;
     }
 
-    @Override
-    public void onReceiveResult(int resultCode, Bundle resultData) {
-        // New Data
-        System.out.println("New IoT data!");
-        switch (resultCode) {
-            case SHOW_RESULT:
-                if (resultData != null) {
-                    //showData(resultData.getString("data"));
-                    //TODO
-                }
-                break;
+    public void onNewMessage(String topic, String messageDevice) {
+        // Convert to json
+        try{
+            JSONObject snapshot = new JSONObject(messageDevice);
+            DeviceIoT deviceIoT = new DeviceIoT();
+            deviceIoT.setName(snapshot.optString("ref", "unknown_device"));
+            // Set device RSSI
+            double power = -120;
+            deviceIoT.setPower(power);
+            // Location
+            if(lastKnowLocation != null) {
+                deviceIoT.setLatitude(lastKnowLocation.getLatitude());
+                deviceIoT.setLongitude(lastKnowLocation.getLongitude());
+            }
+            // Census
+            addOrUpdateDevice(deviceIoT);
+            // notify
+            ((App)this.applicationContext).updateDeviceIoT(getAllDeviceIoT());
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
-
-
-    @Override
-    public void onNewLocation(Double lat, Double lon) {
-        //lastKnowLocation = location;
-        System.out.println("New Location!");
+    public void onNewLocation(Location location) {
+        if(location != null){
+            Log.d("DeviceList:",
+                String.format("Set new device location (Lat,Lon): \t(%.5f,%.5f)", location.getLatitude(), location.getLongitude()));
+            lastKnowLocation = location;
+            ((App)this.applicationContext).updateLocation(new LatLng(location.getLatitude(), location.getLongitude()));
+        }
     }
 }

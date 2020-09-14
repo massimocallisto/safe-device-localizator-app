@@ -72,7 +72,7 @@ public class MQTTService extends JobIntentService {
                     MqttHelper mqttHelper = ((App)getApplication()).getMQTTHelper();
                     System.out.println("Start MQTT? " + (mqttHelper==null));
                     if(mqttHelper==null)
-                        ((App)getApplication()).setMQTTHelper(startMqtt());
+                        ((App)getApplication()).setMQTTHelper(startMqtt((ResultReceiver)intent.getParcelableExtra(RECEIVER)));
                     break;
                 case ACTION_DOWNLOAD:
                    /* mResultReceiver = intent.getParcelableExtra(RECEIVER);
@@ -91,7 +91,7 @@ public class MQTTService extends JobIntentService {
         }
     }
 
-    private MqttHelper startMqtt(){
+    private MqttHelper startMqtt(final ResultReceiver resultReceiver){
         MqttHelper mqttHelper = new MqttHelper(getApplicationContext());
         mqttHelper.mqttAndroidClient.setCallback(new MqttCallbackExtended() {
             @Override
@@ -108,6 +108,10 @@ public class MQTTService extends JobIntentService {
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
                 Log.w("Debug",mqttMessage.toString());
                 System.out.println("Debug: " + mqttMessage.toString());
+                Bundle bundle = new Bundle();
+                bundle.putString("message", mqttMessage.toString());
+                bundle.putString("topic", topic);
+                resultReceiver.send(1, bundle);
                 //dataReceived.setText(mqttMessage.toString());
                 //mChart.addEntry(Float.valueOf(mqttMessage.toString()));
             }

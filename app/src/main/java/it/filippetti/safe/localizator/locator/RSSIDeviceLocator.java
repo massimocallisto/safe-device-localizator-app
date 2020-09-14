@@ -5,8 +5,9 @@ import java.util.List;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 
 public interface RSSIDeviceLocator {
-    boolean addDevice(DeviceIoT deviceIoT);
-    void updateRSS(DeviceIoT deviceIoT, Double rssi);
+    //boolean addDevice(DeviceIoT deviceIoT);
+    void addOrUpdateDevice(DeviceIoT deviceIoT);
+    void updateRSSI(DeviceIoT deviceIoT, Double rssi);
     void updateLocation(DeviceIoT deviceIoT, Double lon, Double lat);
     void sortByRSSI();
     void sortByRSSI(boolean asc);

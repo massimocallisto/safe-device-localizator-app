@@ -3,18 +3,21 @@ package it.filippetti.safe.localizator.locator;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.heatmaps.WeightedLatLng;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
+import java.util.List;
 
 import it.filippetti.safe.localizator.model.DeviceIoT;
 
-public class HeatMapRSSIDeviceLocatorImpl extends RSSIDeviceLocatorImpl {
-    public JSONArray getWeightedHeatMapAsJson(){
+public class HeatMapRSSIDeviceLocatorImpl {
+    //private final RSSIDeviceLocator rssiDeviceLocator;
+
+    /*public HeatMapRSSIDeviceLocatorImpl(RSSIDeviceLocator rssiDeviceLocator) {
+        this.rssiDeviceLocator = rssiDeviceLocator;
+    }*/
+
+    /*public JSONArray getWeightedHeatMapAsJson(){
         JSONArray heatMapData = new JSONArray();
-        for (DeviceIoT deviceIoT : getAllDeviceIoT())
+        for (DeviceIoT deviceIoT : rssiDeviceLocator.getAllDeviceIoT())
         {
             JSONObject o = new JSONObject();
             try {
@@ -26,11 +29,11 @@ public class HeatMapRSSIDeviceLocatorImpl extends RSSIDeviceLocatorImpl {
             }
         }
         return heatMapData;
-    }
+    }*/
 
-    public ArrayList<WeightedLatLng> getWeightedHeatMap(){
+    public static ArrayList<WeightedLatLng> getWeightedHeatMap(List<DeviceIoT> deviceIoTList){
         ArrayList<WeightedLatLng> list = new ArrayList<>();
-        for (DeviceIoT deviceIoT : getAllDeviceIoT()) {
+        for (DeviceIoT deviceIoT : deviceIoTList) {
             list.add(new WeightedLatLng(new LatLng(
                     deviceIoT.getLatitude(),
                     deviceIoT.getLongitude()),
@@ -38,9 +41,4 @@ public class HeatMapRSSIDeviceLocatorImpl extends RSSIDeviceLocatorImpl {
         }
         return list;
     }
-
-    public void buildHeatMap(){
-        // TODO
-     }
-
 }

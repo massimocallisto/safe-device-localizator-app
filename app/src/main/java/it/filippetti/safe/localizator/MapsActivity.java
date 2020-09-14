@@ -1,9 +1,15 @@
 package it.filippetti.safe.localizator;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -11,6 +17,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
@@ -25,6 +32,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import it.filippetti.safe.localizator.locator.HeatMapRSSIDeviceLocatorImpl;
+import it.filippetti.safe.localizator.locator.RSSIDeviceLocator;
+import it.filippetti.safe.localizator.model.DeviceIoT;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -61,7 +72,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private HeatmapTileProvider mProvider;
     private TileOverlay mOverlay;
 
-
+    Marker marker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,13 +100,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-37.8361, 145.708);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in ?"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        addHeatMap();
+        LatLng location = setCurrentLocation(0, 0);
+        lookAt(location);
+        //LatLng sydney = new LatLng(0, 0);
+        //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in ?"));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        //addHeatMap();*)
     }
 
-    private void addHeatMap() {
+    private void updateHeatMap(List<DeviceIoT> deviceIoTS) {
         System.out.println("addHeatMap!!");
         //List<LatLng> list = null;
         ArrayList<WeightedLatLng> data = new ArrayList<WeightedLatLng>();
@@ -112,32 +125,88 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Create a heat map tile provider, passing it the latlngs of the police stations.
         try {
             // TODO: list of rssi
+            ArrayList<WeightedLatLng> items = HeatMapRSSIDeviceLocatorImpl.getWeightedHeatMap(deviceIoTS);
             //list = null;//readItems(R.raw.police_stations);
             mProvider = new HeatmapTileProvider.Builder()
-                    .weightedData(readItems())
+                    .weightedData(items)
                     .build();
             // Add a tile overlay to the map, using the heat map tile provider.
             mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Toast.makeText(this, "Problem reading list of locations.", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
         }
     }
 
-    private ArrayList<WeightedLatLng> readItems() throws JSONException {
-        ArrayList<WeightedLatLng> list = new ArrayList<>();
-        String js ="[{\"lat\":-37.1886,\"lng\":145.708,\"wgt\":20},{\"lat\":-37.8361,\"lng\":144.845,\"wgt\":25},{\"lat\":-38.4034,\"lng\":144.192,\"wgt\":2},{\"lat\":-38.7597,\"lng\":143.67,\"wgt\":2},{\"lat\":-36.9672,\"lng\":141.083,\"wgt\":57}]";
+    private ArrayList<WeightedLatLng> readItems(List<DeviceIoT> deviceIoTS) throws JSONException {
+        //RSSIDeviceLocator rssiDeviceLocator = ((App) getApplication()).getRssiDeviceLocator();
+        //HeatMapRSSIDeviceLocatorImpl heatMapRSSIDeviceLocator = new HeatMapRSSIDeviceLocatorImpl(rssiDeviceLocator);
+        //return heatMapRSSIDeviceLocator.getWeightedHeatMap();
+        return null;
+//
+//
+//        ArrayList<WeightedLatLng> list = new ArrayList<>();
+//        String js ="[{\"lat\":-37.1886,\"lng\":145.708,\"wgt\":20},{\"lat\":-37.8361,\"lng\":144.845,\"wgt\":25},{\"lat\":-38.4034,\"lng\":144.192,\"wgt\":2},{\"lat\":-38.7597,\"lng\":143.67,\"wgt\":2},{\"lat\":-36.9672,\"lng\":141.083,\"wgt\":57}]";
+//
+//        /*InputStream inputStream = getResources().openRawResource(resource);
+//        String json = new Scanner(inputStream).useDelimiter("\\A").next();*/
+//        JSONArray array = new JSONArray(js);
+//        for (int i = 0; i < array.length(); i++) {
+//            JSONObject object = array.getJSONObject(i);
+//            double lat = object.getDouble("lat");
+//            double lng = object.getDouble("lng");
+//            int intensity = object.getInt("wgt");
+//            list.add(new WeightedLatLng(new LatLng(lat, lng), intensity));
+//        }
+//        System.out.println("Got coordinates " + js);
+//        return list;
+    }
 
-        /*InputStream inputStream = getResources().openRawResource(resource);
-        String json = new Scanner(inputStream).useDelimiter("\\A").next();*/
-        JSONArray array = new JSONArray(js);
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject object = array.getJSONObject(i);
-            double lat = object.getDouble("lat");
-            double lng = object.getDouble("lng");
-            int intensity = object.getInt("wgt");
-            list.add(new WeightedLatLng(new LatLng(lat, lng), intensity));
+    // Declaring it
+
+
+    public LatLng setCurrentLocation(double lan, double lon){
+        return setCurrentLocation(new LatLng(lan, lon));
+    }
+
+    public LatLng setCurrentLocation(LatLng location){
+        if(marker == null)
+            marker = mMap.addMarker(new MarkerOptions().position(location).title("Marker in..."));
+        else
+            marker.setPosition(location);
+        return location;
+    }
+
+    public void lookAt(LatLng location){
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+    }
+
+    Observer<List<DeviceIoT>> o = new Observer<List<DeviceIoT>>() {
+        @Override
+        public void onChanged(List<DeviceIoT> deviceIoTS) {
+            Log.d("LiveData", "Updated devices..");
+            updateHeatMap(deviceIoTS);
         }
-        System.out.println("Got coordinates " + js);
-        return list;
+    };
+
+    Observer<LatLng> o2 = new Observer<LatLng>() {
+        @Override
+        public void onChanged(LatLng lastLocation) {
+            Log.d("LiveData", "Updated lastLocation..");
+            if(lastLocation != null && mMap != null){
+                setCurrentLocation(lastLocation);
+                lookAt(lastLocation);
+            }
+        }
+    };
+
+    @Override
+    public void onAttachFragment(@NonNull Fragment fragment) {
+        super.onAttachFragment(fragment);
+        MutableLiveData<List<DeviceIoT>> liveDeviceIoT = ((App) getApplicationContext()).getDeviceIoT();
+        liveDeviceIoT.observe(this, o);
+
+        MutableLiveData<LatLng> lastLocation = ((App) getApplicationContext()).getLastLocation();
+        lastLocation.observe(this, o2);
     }
 }

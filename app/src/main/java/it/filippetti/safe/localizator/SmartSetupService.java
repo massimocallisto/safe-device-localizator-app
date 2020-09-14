@@ -83,9 +83,9 @@ public class SmartSetupService extends Service {
 
     public void updateLocation(Location location){
         if(location != null && locationReceiver != null) {
-            Log.d("sample", "sample");
             Bundle bundle = new Bundle();
-            bundle.putString("lon_lat",String.format("Showing From JobIntent Service %d", 100));
+            bundle.putParcelable("location", location);
+            //bundle.putString("lon_lat",String.format("Showing From JobIntent Service %d", 100));
             locationReceiver.send(0, bundle);
         }
         //    locationReceiver.onNewLocation(location);

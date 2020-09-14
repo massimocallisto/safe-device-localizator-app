@@ -1,5 +1,7 @@
 package it.filippetti.safe.localizator.model;
 
+import androidx.annotation.NonNull;
+
 import java.io.Serializable;
 
 //import it.smartspace.jz.communication.interfaces.InductiveCommunication;
@@ -94,5 +96,13 @@ public class DeviceIoT implements Serializable {
 
     public Double getAltitude() {
         return altitude;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return String.format("*** Devce IoT:\n " +
+                "* Name: \t%s\n* Power: \t%.2f\n* (Lat,Lon): \t(%.5f,%.5f)",
+                name, power, latitude, longitude);
     }
 }

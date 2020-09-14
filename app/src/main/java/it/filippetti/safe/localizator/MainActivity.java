@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import it.filippetti.safe.localizator.locator.RSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.mqtt.MQTTService;
+import it.filippetti.safe.localizator.mqtt.MqttHelper;
 
 import static it.filippetti.safe.localizator.mqtt.MQTTService.SHOW_RESULT;
 
@@ -57,10 +58,18 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
         buttonMQTT.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 System.out.println("Button MQTT Clicked");
+                final RSSIDeviceLocatorImpl rssiDeviceLocator = new RSSIDeviceLocatorImpl(getApplication());
+                ((App)getApplication()).setRssiDeviceLocator(rssiDeviceLocator);
 
                 ServiceResultReceiver deviceDataResultReceiver = new ServiceResultReceiver(new Handler());
-                final RSSIDeviceLocatorImpl rssiDeviceLocator = new RSSIDeviceLocatorImpl();
-                deviceDataResultReceiver.setReceiver(rssiDeviceLocator);
+                deviceDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
+                    @Override
+                    public void onReceiveResult(int resultCode, Bundle resultData) {
+                        String message = resultData.getString("message");
+                        String topic = resultData.getString("topic");
+                        rssiDeviceLocator.onNewMessage(topic, message);
+                    }
+                });
                 MQTTService.enqueueNewWork(getApplicationContext(), deviceDataResultReceiver, MQTTService.START_MQTT);
 
                 // Start Location GPS
@@ -70,8 +79,8 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
                 locationDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
                     @Override
                     public void onReceiveResult(int resultCode, Bundle resultData) {
-                        resultData.getString("lon_lat");
-                        rssiDeviceLocator.onNewLocation(null, null);
+                        Location location = resultData.getParcelable("location");
+                        rssiDeviceLocator.onNewLocation(location);
                     }
                 });
                 startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
