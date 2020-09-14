@@ -24,6 +24,15 @@ public class App extends Application {
     private boolean commandIsRunning;
     private MqttHelper mqttHelper;
     private RSSIDeviceLocator rssiDeviceLocator;
+    private MutableLiveData<List<DeviceIoT>> deviceIoT = new MutableLiveData<>();
+    private MutableLiveData<LatLng> lastLocation = new MutableLiveData<>();
+
+
+    String mqttserverUri = "tcp://test.mosquitto.org:1883";
+    String mqttclientId = "ExampleAndroidClientSAFE";
+    String mqttsubscriptionTopic = "safe/+";
+    String mqttusername = "xxxxxxx";
+    String mqttpassword = "yyyyyyy";
 
     public MutableLiveData<List<DeviceIoT>> getDeviceIoT() {
         return deviceIoT;
@@ -41,8 +50,7 @@ public class App extends Application {
         lastLocation.postValue(latLng);
     }
 
-    private MutableLiveData<List<DeviceIoT>> deviceIoT = new MutableLiveData<>();
-    private MutableLiveData<LatLng> lastLocation = new MutableLiveData<>();
+
 
     @Override
     public void onCreate() {
@@ -63,5 +71,45 @@ public class App extends Application {
 
     public void setRssiDeviceLocator(RSSIDeviceLocator rssiDeviceLocator) {
         this.rssiDeviceLocator = rssiDeviceLocator;
+    }
+
+    public String getMqttserverUri() {
+        return mqttserverUri;
+    }
+
+    public void setMqttserverUri(String mqttserverUri) {
+        this.mqttserverUri = mqttserverUri;
+    }
+
+    public String getMqttclientId() {
+        return mqttclientId;
+    }
+
+    public void setMqttclientId(String mqttclientId) {
+        this.mqttclientId = mqttclientId;
+    }
+
+    public String getMqttsubscriptionTopic() {
+        return mqttsubscriptionTopic;
+    }
+
+    public void setMqttsubscriptionTopic(String mqttsubscriptionTopic) {
+        this.mqttsubscriptionTopic = mqttsubscriptionTopic;
+    }
+
+    public String getMqttusername() {
+        return mqttusername;
+    }
+
+    public void setMqttusername(String mqttusername) {
+        this.mqttusername = mqttusername;
+    }
+
+    public String getMqttpassword() {
+        return mqttpassword;
+    }
+
+    public void setMqttpassword(String mqttpassword) {
+        this.mqttpassword = mqttpassword;
     }
 }

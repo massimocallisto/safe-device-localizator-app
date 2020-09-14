@@ -144,6 +144,11 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            System.out.println("Action set");
+            Intent activity2Intent = new Intent(getApplicationContext(), SettingsActivity.class);
+            startActivity(activity2Intent);
+
+
             return true;
         }
 

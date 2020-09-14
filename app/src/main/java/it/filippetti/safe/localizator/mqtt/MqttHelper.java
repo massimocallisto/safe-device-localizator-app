@@ -13,22 +13,23 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import it.filippetti.safe.localizator.App;
+
 /**
  * Created by wildan on 3/19/2017.
  */
 
 public class MqttHelper {
     public MqttAndroidClient mqttAndroidClient;
+    App context;
 
-    final String serverUri = "tcp://test.mosquitto.org:1883";
 
-    final String clientId = "ExampleAndroidClientSAFE";
-    final String subscriptionTopic = "safe/+";
-
-    final String username = "xxxxxxx";
-    final String password = "yyyyyyy";
 
     public MqttHelper(Context context){
+        this.context = (App)context;
+        String serverUri = this.context.getMqttserverUri();
+        String clientId = this.context.getMqttclientId();
+
         mqttAndroidClient = new MqttAndroidClient(context, serverUri, clientId);
         mqttAndroidClient.setCallback(new MqttCallbackExtended() {
             @Override
@@ -82,7 +83,7 @@ public class MqttHelper {
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    Log.w("Mqtt", "Failed to connect to: " + serverUri + exception.toString());
+                    Log.w("Mqtt", "Failed to connect to: " + context.getMqttserverUri() + exception.toString());
                 }
             });
 
@@ -94,6 +95,7 @@ public class MqttHelper {
 
 
     private void subscribeToTopic() {
+        String subscriptionTopic = this.context.getMqttsubscriptionTopic();
         try {
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override
