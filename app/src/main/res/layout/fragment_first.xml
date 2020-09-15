@@ -6,31 +6,43 @@
     android:layout_height="match_parent"
     tools:context=".FirstFragment">
 
-    <TextView
-        android:id="@+id/textview_first"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/hello_first_fragment"
-        app:layout_constraintBottom_toTopOf="@id/button_first"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/button_first"
-        android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/mqttbtx1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MQTT" />
+
+        <TextView
+            android:id="@+id/mqtttxtstatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Waiting for MQTT status connection.." />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/next"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="64dp"
+        android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textview_first" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/btxmap"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="MapView"
-        tools:layout_editor_absoluteX="152dp"
-        tools:layout_editor_absoluteY="322dp" />
+        <Button
+            android:id="@+id/btxmap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MapView" />
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

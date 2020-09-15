@@ -1,6 +1,8 @@
 package it.filippetti.safe.localizator;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.lifecycle.MutableLiveData;
 
@@ -26,11 +28,13 @@ public class App extends Application {
     private RSSIDeviceLocator rssiDeviceLocator;
     private MutableLiveData<List<DeviceIoT>> deviceIoT = new MutableLiveData<>();
     private MutableLiveData<LatLng> lastLocation = new MutableLiveData<>();
+    private MutableLiveData<String> mqttStatus = new MutableLiveData<>();
 
 
-    String mqttserverUri = "tcp://test.mosquitto.org:1883";
-    String mqttclientId = "ExampleAndroidClientSAFE";
-    String mqttsubscriptionTopic = "safe/+";
+    String mqttserverUri = "tcp://localhost:1883";
+    String mqttclientId = "1";
+    String mqttsubscriptionTopic = "some_topic";
+    // Not used
     String mqttusername = "xxxxxxx";
     String mqttpassword = "yyyyyyy";
 
@@ -49,13 +53,23 @@ public class App extends Application {
     public void updateLocation(LatLng latLng){
         lastLocation.postValue(latLng);
     }
+    public MutableLiveData<String> getMQTTStatus() {
+        return mqttStatus;
+    }
 
+    public void updateMqttStatus(String value){
+        mqttStatus.postValue(value);
+    }
 
+    SharedPreferences sharedPref;
 
     @Override
     public void onCreate() {
         super.onCreate();
-
+        sharedPref = this.getSharedPreferences("safe_localizato.txt", Context.MODE_PRIVATE);
+        mqttserverUri = sharedPref.getString("mqttserverUri", "tcp://test.mosquitto.org:1883");
+        mqttclientId = sharedPref.getString("mqttclientId", "ExampleAndroidClientSAFE");
+        mqttsubscriptionTopic = sharedPref.getString("mqttsubscriptionTopic", "/safe.it/#");
     }
 
     public MqttHelper getMQTTHelper() {
@@ -77,8 +91,17 @@ public class App extends Application {
         return mqttserverUri;
     }
 
+    private void updateStorage(){
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("mqttserverUri", this.mqttserverUri);
+        editor.putString("mqttclientId", this.mqttclientId);
+        editor.putString("mqttsubscriptionTopic", this.mqttsubscriptionTopic);
+        editor.commit();
+    }
+
     public void setMqttserverUri(String mqttserverUri) {
         this.mqttserverUri = mqttserverUri;
+        updateStorage();
     }
 
     public String getMqttclientId() {
@@ -87,6 +110,7 @@ public class App extends Application {
 
     public void setMqttclientId(String mqttclientId) {
         this.mqttclientId = mqttclientId;
+        updateStorage();
     }
 
     public String getMqttsubscriptionTopic() {
@@ -95,6 +119,7 @@ public class App extends Application {
 
     public void setMqttsubscriptionTopic(String mqttsubscriptionTopic) {
         this.mqttsubscriptionTopic = mqttsubscriptionTopic;
+        updateStorage();
     }
 
     public String getMqttusername() {

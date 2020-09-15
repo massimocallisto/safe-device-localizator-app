@@ -16,6 +16,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
+import androidx.lifecycle.MutableLiveData;
 
 import it.filippetti.safe.localizator.App;
 import it.filippetti.safe.localizator.ServiceResultReceiver;
@@ -71,8 +72,10 @@ public class MQTTService extends JobIntentService {
                 case START_MQTT:
                     MqttHelper mqttHelper = ((App)getApplication()).getMQTTHelper();
                     System.out.println("Start MQTT? " + (mqttHelper==null));
-                    if(mqttHelper==null)
-                        ((App)getApplication()).setMQTTHelper(startMqtt((ResultReceiver)intent.getParcelableExtra(RECEIVER)));
+                    if(mqttHelper==null) {
+                        ((App) getApplication()).setMQTTHelper(startMqtt((ResultReceiver) intent.getParcelableExtra(RECEIVER)));
+                        ((App) getApplication()).updateMqttStatus("Connecting..");
+                    }
                     break;
                 case ACTION_DOWNLOAD:
                    /* mResultReceiver = intent.getParcelableExtra(RECEIVER);
@@ -93,20 +96,26 @@ public class MQTTService extends JobIntentService {
 
     private MqttHelper startMqtt(final ResultReceiver resultReceiver){
         MqttHelper mqttHelper = new MqttHelper(getApplicationContext());
+
         mqttHelper.mqttAndroidClient.setCallback(new MqttCallbackExtended() {
             @Override
             public void connectComplete(boolean b, String s) {
                 Log.w("Debug","Connected");
+                ((App) getApplication()).updateMqttStatus("Connected");
             }
 
             @Override
             public void connectionLost(Throwable throwable) {
-
+                ((App) getApplication()).updateMqttStatus("Not connected");
             }
 
             @Override
             public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
                 Log.w("Debug",mqttMessage.toString());
+                if(mqttMessage.isRetained()) {
+                    Log.w("Warn mwtt", "Message retained.. skip!");
+                    return;
+                }
                 System.out.println("Debug: " + mqttMessage.toString());
                 Bundle bundle = new Bundle();
                 bundle.putString("message", mqttMessage.toString());

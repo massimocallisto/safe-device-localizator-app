@@ -49,49 +49,49 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
                         .setAction("Action", null).show();
             }
         });
-        mServiceResultReceiver = new ServiceResultReceiver(new Handler());
+        /*mServiceResultReceiver = new ServiceResultReceiver(new Handler());
         mServiceResultReceiver.setReceiver(this);
         mTextView = findViewById(R.id.textView);
-        showDataFromBackground(MainActivity.this, mServiceResultReceiver);
+        showDataFromBackground(MainActivity.this, mServiceResultReceiver);*/
 
-        Button buttonMQTT = findViewById(R.id.btxmqtt);
-        buttonMQTT.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                System.out.println("Button MQTT Clicked");
-                final RSSIDeviceLocatorImpl rssiDeviceLocator = new RSSIDeviceLocatorImpl(getApplication());
-                ((App)getApplication()).setRssiDeviceLocator(rssiDeviceLocator);
-
-                ServiceResultReceiver deviceDataResultReceiver = new ServiceResultReceiver(new Handler());
-                deviceDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
-                    @Override
-                    public void onReceiveResult(int resultCode, Bundle resultData) {
-                        String message = resultData.getString("message");
-                        String topic = resultData.getString("topic");
-                        rssiDeviceLocator.onNewMessage(topic, message);
-                    }
-                });
-                MQTTService.enqueueNewWork(getApplicationContext(), deviceDataResultReceiver, MQTTService.START_MQTT);
-
-                // Start Location GPS
-               // requestPermissions(LOCATION_PERMS, 1337+3);
-                Intent startServiceIntent = new Intent(getApplicationContext(), SmartSetupService.class);
-                ServiceResultReceiver locationDataResultReceiver = new ServiceResultReceiver(new Handler());
-                locationDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
-                    @Override
-                    public void onReceiveResult(int resultCode, Bundle resultData) {
-                        Location location = resultData.getParcelable("location");
-                        rssiDeviceLocator.onNewLocation(location);
-                    }
-                });
-                startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
-                startService(startServiceIntent);
-//                Intent intent = new Intent(getApplicationContext(), MQTTService.class);
-//                //intent.putExtra(MQTTService.START_MQTT, mServiceResultReceiver);
-//                intent.setAction(MQTTService.START_MQTT);
-//                startService(intent);
-//                //startActivity(intent);
-            }
-        });
+//        Button buttonMQTT = findViewById(R.id.btxmqtt);
+//        buttonMQTT.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                System.out.println("Button MQTT Clicked");
+//                final RSSIDeviceLocatorImpl rssiDeviceLocator = new RSSIDeviceLocatorImpl(getApplication());
+//                ((App)getApplication()).setRssiDeviceLocator(rssiDeviceLocator);
+//
+//                ServiceResultReceiver deviceDataResultReceiver = new ServiceResultReceiver(new Handler());
+//                deviceDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
+//                    @Override
+//                    public void onReceiveResult(int resultCode, Bundle resultData) {
+//                        String message = resultData.getString("message");
+//                        String topic = resultData.getString("topic");
+//                        rssiDeviceLocator.onNewMessage(topic, message);
+//                    }
+//                });
+//                MQTTService.enqueueNewWork(getApplicationContext(), deviceDataResultReceiver, MQTTService.START_MQTT);
+//
+//                // Start Location GPS
+//               // requestPermissions(LOCATION_PERMS, 1337+3);
+//                Intent startServiceIntent = new Intent(getApplicationContext(), SmartSetupService.class);
+//                ServiceResultReceiver locationDataResultReceiver = new ServiceResultReceiver(new Handler());
+//                locationDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
+//                    @Override
+//                    public void onReceiveResult(int resultCode, Bundle resultData) {
+//                        Location location = resultData.getParcelable("location");
+//                        rssiDeviceLocator.onNewLocation(location);
+//                    }
+//                });
+//                startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
+//                startService(startServiceIntent);
+////                Intent intent = new Intent(getApplicationContext(), MQTTService.class);
+////                //intent.putExtra(MQTTService.START_MQTT, mServiceResultReceiver);
+////                intent.setAction(MQTTService.START_MQTT);
+////                startService(intent);
+////                //startActivity(intent);
+//            }
+//        });
     }
 //    @Override
 //    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {

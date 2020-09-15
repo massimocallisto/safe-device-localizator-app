@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -116,12 +117,34 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
             DeviceIoT deviceIoT = new DeviceIoT();
             deviceIoT.setName(snapshot.optString("ref", "unknown_device"));
             // Set device RSSI
-            double power = -120;
-            deviceIoT.setPower(power);
+            double power = Double.MIN_VALUE;
+            JSONArray r = snapshot.optJSONArray("r");
+            if(r != null){
+                for(int i = 0; i < r.length(); i++){
+                    JSONObject o = (JSONObject) r.get(i);
+                    String s = o.optString("k", "unknown");
+                    if(s.equalsIgnoreCase("rssi")){
+                        double v = o.optDouble("v", Double.MIN_VALUE);
+                    }
+                }
+            }
+            if(power != Double.MIN_VALUE){
+                deviceIoT.setPower(power);
+                // also set location
+            }
+
             // Location
             if(lastKnowLocation != null) {
                 deviceIoT.setLatitude(lastKnowLocation.getLatitude());
                 deviceIoT.setLongitude(lastKnowLocation.getLongitude());
+            }
+            if(deviceIoT.getPower() == Double.MIN_VALUE){
+                Log.w("device_census", "Cannot commit device with " + "null RSSI");
+                return;
+            }
+            if( lastKnowLocation == null){
+                Log.w("device_census", "Cannot commit device with " + "null location");
+                return;
             }
             // Census
             addOrUpdateDevice(deviceIoT);

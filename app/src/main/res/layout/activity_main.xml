@@ -18,17 +18,17 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
-        <Button
+        <!--<Button
             android:id="@+id/btxmqtt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="MQTT" />
+            android:text="MQTT" />-->
 
-        <TextView
+        <!--<TextView
             android:id="@+id/textView"
             android:layout_width="110dp"
             android:layout_height="wrap_content"
-            android:text="TextView" />
+            android:text="TextView" />-->
 
     </com.google.android.material.appbar.AppBarLayout>
 
