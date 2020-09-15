@@ -24,15 +24,15 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
     private List<DeviceIoT> deviceList;
     private Application applicationContext;
 
-    public SmartSetupService getLocationProvider() {
-        return locationProvider;
-    }
+//    public SmartSetupService getLocationProvider() {
+//        return locationProvider;
+//    }
+//
+//    public void setLocationProvider(SmartSetupService locationProvider) {
+//        this.locationProvider = locationProvider;
+//    }
 
-    public void setLocationProvider(SmartSetupService locationProvider) {
-        this.locationProvider = locationProvider;
-    }
-
-    private SmartSetupService locationProvider;
+    //private SmartSetupService locationProvider;
 
     public RSSIDeviceLocatorImpl(Application application) {
         this.applicationContext = application;

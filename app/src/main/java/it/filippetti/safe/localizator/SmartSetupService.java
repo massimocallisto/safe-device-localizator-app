@@ -33,14 +33,18 @@ public class SmartSetupService extends Service {
     public void onCreate() {
         Log.d("SmartSetupService", "onCreate");
         //localBroadcast = LocalBroadcastManager.getInstance(this);
-        startAcquiringLocation();
+        //startAcquiringLocation();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         System.out.println("ionStartCommand SmartSetup");
-        locationReceiver  = intent.getParcelableExtra("location_receiver");
-        return super.onStartCommand(intent, flags, startId);
+        if(intent != null){
+            locationReceiver  = intent.getParcelableExtra("location_receiver");
+            startAcquiringLocation();
+        }
+         return super.onStartCommand(intent, flags, startId);
+
     }
 
     private void startAcquiringLocation(){

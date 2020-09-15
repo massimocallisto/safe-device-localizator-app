@@ -169,6 +169,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return setCurrentLocation(new LatLng(lan, lon));
     }
 
+    public boolean hasLocation(){
+        return marker != null;
+    }
+
     public LatLng setCurrentLocation(LatLng location){
         if(marker == null)
             marker = mMap.addMarker(new MarkerOptions().position(location).title("Marker in..."));
@@ -195,7 +199,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d("LiveData", "Updated lastLocation..");
             if(lastLocation != null && mMap != null){
                 setCurrentLocation(lastLocation);
-                lookAt(lastLocation);
+                if(!hasLocation())
+                    lookAt(lastLocation);
             }
         }
     };
