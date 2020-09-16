@@ -28,14 +28,14 @@
                 android:paddingLeft="10dp"
                 android:scaleType="fitXY"></ImageButton>
 
-            <ImageButton
+            <!--<ImageButton
                 android:id="@+id/ButtonClear"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@android:drawable/ic_menu_delete"
                 android:cropToPadding="false"
                 android:paddingLeft="10dp"
-                android:scaleType="fitXY"></ImageButton>
+                android:scaleType="fitXY"></ImageButton>-->
 
             <Spinner
                 android:id="@+id/trackdevicespinner"

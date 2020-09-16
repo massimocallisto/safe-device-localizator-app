@@ -170,13 +170,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 lookAt();
             }
         });
-        ImageButton ButtonClear = findViewById(R.id.ButtonClear);
+        /*ImageButton ButtonClear = findViewById(R.id.ButtonClear);
         ButtonClear.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Log.d("Maps", "Cleaning heatmap...");
                 updateHeatMap(new ArrayList<CoordinatorIoT.DeviceLocation>());
             }
-        });
+        });*/
 
 
         //LatLng sydney = new LatLng(0, 0);
