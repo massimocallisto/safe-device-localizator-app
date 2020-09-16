@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.List;
 
 import it.filippetti.safe.localizator.App;
 import it.filippetti.safe.localizator.SmartSetupService;
+import it.filippetti.safe.localizator.model.CoordinatorIoT;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 
 public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResultReceiver.Receiver, LocationReceiver*/{
@@ -23,6 +25,7 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
     // TODO: to improve with cach look-up data structure
     private List<DeviceIoT> deviceList;
     private Application applicationContext;
+    private CoordinatorIoT coordinatorIoT;
 
 //    public SmartSetupService getLocationProvider() {
 //        return locationProvider;
@@ -37,6 +40,7 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
     public RSSIDeviceLocatorImpl(Application application) {
         this.applicationContext = application;
         this.deviceList = new ArrayList<>();
+        this.coordinatorIoT = new CoordinatorIoT();
     }
 
     /*@Override
@@ -110,6 +114,15 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
         return deviceList;
     }
 
+     @Override
+    public CoordinatorIoT getCoordinatorIoT() {
+        return coordinatorIoT;
+    }
+
+    public void setCoordinatorIoT(CoordinatorIoT coordinatorIoT) {
+        this.coordinatorIoT = coordinatorIoT;
+    }
+
     public void onNewMessage(String topic, String messageDevice) {
         // Convert to json
         try{
@@ -117,42 +130,56 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
             DeviceIoT deviceIoT = new DeviceIoT();
             deviceIoT.setName(snapshot.optString("ref", "unknown_device"));
             // Set device RSSI
-            double power = Double.MIN_VALUE;
-            JSONArray r = snapshot.optJSONArray("r");
-            if(r != null){
-                for(int i = 0; i < r.length(); i++){
-                    JSONObject o = (JSONObject) r.get(i);
-                    String s = o.optString("k", "unknown");
-                    if(s.equalsIgnoreCase("rssi")){
-                        double v = o.optDouble("v", Double.MIN_VALUE);
-                    }
-                }
+            double power = getPower(snapshot);
+            boolean hasPower = setPower(deviceIoT, power);
+            boolean hasLocation = setLocation(deviceIoT, lastKnowLocation);
+            if(hasPower && hasLocation) {
+                // Census
+                addOrUpdateDevice(deviceIoT);
+                coordinatorIoT.trackDeviceLocation(deviceIoT);
+                // notify
+                ((App)this.applicationContext).updateDeviceIoT(getAllDeviceIoT());
+            }else{
+                Log.w("device_census", !hasPower ?
+                        "Cannot commit device with " + "null RSSI" :
+                            "Cannot commit device with " + "null location");
             }
-            if(power != Double.MIN_VALUE){
-                deviceIoT.setPower(power);
-                // also set location
-            }
-
-            // Location
-            if(lastKnowLocation != null) {
-                deviceIoT.setLatitude(lastKnowLocation.getLatitude());
-                deviceIoT.setLongitude(lastKnowLocation.getLongitude());
-            }
-            if(deviceIoT.getPower() == Double.MIN_VALUE){
-                Log.w("device_census", "Cannot commit device with " + "null RSSI");
-                return;
-            }
-            if( lastKnowLocation == null){
-                Log.w("device_census", "Cannot commit device with " + "null location");
-                return;
-            }
-            // Census
-            addOrUpdateDevice(deviceIoT);
-            // notify
-            ((App)this.applicationContext).updateDeviceIoT(getAllDeviceIoT());
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    private double getPower(JSONObject snapshot) throws JSONException {
+        double power = Double.MIN_VALUE;
+        JSONArray r = snapshot.optJSONArray("r");
+        if(r != null){
+            for(int i = 0; i < r.length(); i++){
+                JSONObject o = (JSONObject) r.get(i);
+                String s = o.optString("k", "unknown");
+                if(s.equalsIgnoreCase("rssi")){
+                    power = o.optDouble("v", Double.MIN_VALUE);
+                }
+            }
+        }
+        return power;
+    }
+
+    private boolean setPower(DeviceIoT deviceIoT, double power) {
+        if(power != Double.MIN_VALUE){
+            deviceIoT.setPower(power + 120); // normalize in order to have only positive values..
+            return true;
+        }
+        return false;
+    }
+
+    private boolean setLocation(DeviceIoT deviceIoT, Location location) {
+        if(location != null) {
+            deviceIoT.setLatitude(location.getLatitude());
+            deviceIoT.setLongitude(location.getLongitude());
+            deviceIoT.setLocation(location);
+            return true;
+        }
+        return false;
     }
 
     public void onNewLocation(Location location) {

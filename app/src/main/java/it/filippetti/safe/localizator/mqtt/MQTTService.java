@@ -101,12 +101,14 @@ public class MQTTService extends JobIntentService {
             @Override
             public void connectComplete(boolean b, String s) {
                 Log.w("Debug","Connected");
-                ((App) getApplication()).updateMqttStatus("Connected");
+                App app = (App) getApplication();
+                app.updateMqttStatus("Connected to " + app.getMqttserverUri());
             }
 
             @Override
             public void connectionLost(Throwable throwable) {
-                ((App) getApplication()).updateMqttStatus("Not connected");
+                App app = (App) getApplication();
+                app.updateMqttStatus("Connection lost from " + app.getMqttserverUri());
             }
 
             @Override

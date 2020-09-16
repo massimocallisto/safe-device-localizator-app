@@ -1,5 +1,6 @@
 package it.filippetti.safe.localizator;
 
+import android.Manifest;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
@@ -20,6 +21,9 @@ import it.filippetti.safe.localizator.locator.RSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.mqtt.MQTTService;
 
 public class FirstFragment extends Fragment {
+    private static final String[] LOCATION_PERMS={
+            Manifest.permission.ACCESS_FINE_LOCATION
+    };
 
     @Override
     public View onCreateView(
@@ -45,12 +49,38 @@ public class FirstFragment extends Fragment {
         MutableLiveData<String> mqttStatus = ((App)getActivity().getApplication()).getMQTTStatus();
         mqttStatus.observe(this, o2);
     }
+
+    Observer<String> o = new Observer<String>() {
+        @Override
+        public void onChanged(String txt) {
+            Log.d("Loc status update", "? " + txt);
+            View viewById = view.findViewById(R.id.textViewGPS);
+            if(viewById != null){
+                ((TextView)viewById).setText(txt);
+            }
+        }
+    };
+
+    public void setLocalizationStatusUpdate() {
+        MutableLiveData<String> gpsStatus = ((App)getActivity().getApplication()).getLocalizationStatus();
+        gpsStatus.observe(this, o);
+    }
+
     View view;
+
+    void initLocalizator(App app){
+        if(app.getRssiDeviceLocator() == null){
+            RSSIDeviceLocatorImpl _rssiDeviceLocator = new RSSIDeviceLocatorImpl(app);
+            app.setRssiDeviceLocator(_rssiDeviceLocator);
+
+        }
+    }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         this.view = view;
         setMqttStatusUpdate();
+        setLocalizationStatusUpdate();
 
 
         Button buttonMQTT = view.findViewById(R.id.mqttbtx1);
@@ -58,8 +88,8 @@ public class FirstFragment extends Fragment {
             public void onClick(View v) {
                 System.out.println("Button MQTT Clicked");
                 App app = (App)getActivity().getApplication();
-                final RSSIDeviceLocatorImpl rssiDeviceLocator = new RSSIDeviceLocatorImpl(app);
-                app.setRssiDeviceLocator(rssiDeviceLocator);
+                initLocalizator(app);
+                final RSSIDeviceLocatorImpl rssiDeviceLocator = (RSSIDeviceLocatorImpl) app.getRssiDeviceLocator();
 
                 ServiceResultReceiver deviceDataResultReceiver = new ServiceResultReceiver(new Handler());
                 deviceDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
@@ -72,7 +102,7 @@ public class FirstFragment extends Fragment {
                 });
                 MQTTService.enqueueNewWork(app, deviceDataResultReceiver, MQTTService.START_MQTT);
 
-                // Start Location GPS
+                /*// Start Location GPS
                 // requestPermissions(LOCATION_PERMS, 1337+3);
                 Intent startServiceIntent = new Intent(app, SmartSetupService.class);
                 ServiceResultReceiver locationDataResultReceiver = new ServiceResultReceiver(new Handler());
@@ -84,12 +114,31 @@ public class FirstFragment extends Fragment {
                     }
                 });
                 startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
+                getActivity().startService(startServiceIntent);*/
+
+            }
+        });
+        Button btxlocalization = view.findViewById(R.id.btxlocalization);
+        btxlocalization.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                System.out.println("Button btxlocalization Clicked");
+                App app = (App)getActivity().getApplication();
+                initLocalizator(app);
+                final RSSIDeviceLocatorImpl rssiDeviceLocator = (RSSIDeviceLocatorImpl) app.getRssiDeviceLocator();
+
+                // Start Location GPS
+                requestPermissions(LOCATION_PERMS, 1337+3);
+                Intent startServiceIntent = new Intent(app, SmartSetupService.class);
+                ServiceResultReceiver locationDataResultReceiver = new ServiceResultReceiver(new Handler());
+                locationDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
+                    @Override
+                    public void onReceiveResult(int resultCode, Bundle resultData) {
+                        Location location = resultData.getParcelable("location");
+                        rssiDeviceLocator.onNewLocation(location);
+                    }
+                });
+                startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
                 getActivity().startService(startServiceIntent);
-//                Intent intent = new Intent(getApplicationContext(), MQTTService.class);
-//                //intent.putExtra(MQTTService.START_MQTT, mServiceResultReceiver);
-//                intent.setAction(MQTTService.START_MQTT);
-//                startService(intent);
-//                //startActivity(intent);
             }
         });
 
@@ -102,7 +151,7 @@ public class FirstFragment extends Fragment {
         });*/
 
        // final View _view = view;
-        Button buttonOne = view.findViewById(R.id.btxmap);
+        Button buttonOne = view.findViewById(R.id.viewmap);
         if(buttonOne != null)
             buttonOne.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {

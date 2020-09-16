@@ -6,10 +6,18 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -35,9 +43,12 @@ import java.util.Scanner;
 
 import it.filippetti.safe.localizator.locator.HeatMapRSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.locator.RSSIDeviceLocator;
+import it.filippetti.safe.localizator.locator.RSSIDeviceLocatorImpl;
+import it.filippetti.safe.localizator.model.CoordinatorIoT;
 import it.filippetti.safe.localizator.model.DeviceIoT;
+import it.filippetti.safe.localizator.mqtt.MQTTService;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, AdapterView.OnItemSelectedListener {
 
     /**
      * Alternative radius for convolution
@@ -71,8 +82,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private HeatmapTileProvider mProvider;
     private TileOverlay mOverlay;
+    private String trackedDevice = "";
+    private Spinner spinner;
 
     Marker marker;
+    private ArrayList<String> deviceList;
+    private ArrayAdapter<String> deviceListAdapter;
+    boolean isLocationUpdated = false;
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+        String s = (String)this.spinner.getItemAtPosition(position);
+        System.out.println("Selected device list. Value; " + s);
+        this.trackedDevice = s;
+        refreshHeatMap();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        // TODO Auto-generated method stub
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +114,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        spinner = (Spinner)findViewById(R.id.trackdevicespinner);
+        deviceList = new ArrayList<String>();
+
+        deviceListAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, deviceList);
+        spinner.setAdapter(deviceListAdapter);
+        spinner.setOnItemSelectedListener(this);
+    }
+
+    void updateTrackedDevice(List<DeviceIoT> deviceIoTList){
+        deviceList.clear();
+        deviceList.add("-----------");
+        for(DeviceIoT d : deviceIoTList) {
+            deviceList.add(d.getName());
+        }
+        deviceListAdapter.notifyDataSetChanged();
+        makeSelected();
+    }
+
+    void makeSelected(){
+        if(trackedDevice != null){
+            for(int i = 0; i < deviceList.size(); i++){
+                if(deviceList.get(i).equals(trackedDevice))
+                    spinner.setSelection(i);
+                return;
+            }
+        }
     }
 
     /**
@@ -100,33 +157,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng location = setCurrentLocation(0, 0);
+        LatLng location = setCurrentLocation(43, 13);
+        setCurrentLocation(location);
         lookAt(location);
+
+        if(isLocationUpdated)
+            lookAt();
+
+        ImageButton buttonLocate = findViewById(R.id.Button01);
+        buttonLocate.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                lookAt();
+            }
+        });
+        ImageButton ButtonClear = findViewById(R.id.ButtonClear);
+        ButtonClear.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.d("Maps", "Cleaning heatmap...");
+                updateHeatMap(new ArrayList<CoordinatorIoT.DeviceLocation>());
+            }
+        });
+
+
         //LatLng sydney = new LatLng(0, 0);
         //mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in ?"));
         //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
         //addHeatMap();*)
     }
 
-    private void updateHeatMap(List<DeviceIoT> deviceIoTS) {
-        System.out.println("addHeatMap!!");
-        //List<LatLng> list = null;
-        ArrayList<WeightedLatLng> data = new ArrayList<WeightedLatLng>();
+    void clearHeatMap(){
+        if(mProvider != null) {
+            mOverlay.remove();
+            mOverlay.clearTileCache();
+        }
+    }
 
-
-        // Get the data: latitude/longitude positions of police stations.
-        /*try {
-            // TODO: list of rssi
-            list = null;//readItems(R.raw.police_stations);
-        } catch (JSONException e) {
-            Toast.makeText(this, "Problem reading list of locations.", Toast.LENGTH_LONG).show();
-        }*/
-
-        // Create a heat map tile provider, passing it the latlngs of the police stations.
+    private void updateHeatMap(List<CoordinatorIoT.DeviceLocation> trackedDevice) {
+        clearHeatMap();
+        if(trackedDevice == null || trackedDevice .isEmpty()){
+            return;
+        }
         try {
-            // TODO: list of rssi
-            ArrayList<WeightedLatLng> items = HeatMapRSSIDeviceLocatorImpl.getWeightedHeatMap(deviceIoTS);
-            //list = null;//readItems(R.raw.police_stations);
+            ArrayList<WeightedLatLng> items = HeatMapRSSIDeviceLocatorImpl.getWeightedHeatMap(trackedDevice);
             mProvider = new HeatmapTileProvider.Builder()
                     .weightedData(items)
                     .build();
@@ -138,69 +210,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private ArrayList<WeightedLatLng> readItems(List<DeviceIoT> deviceIoTS) throws JSONException {
-        //RSSIDeviceLocator rssiDeviceLocator = ((App) getApplication()).getRssiDeviceLocator();
-        //HeatMapRSSIDeviceLocatorImpl heatMapRSSIDeviceLocator = new HeatMapRSSIDeviceLocatorImpl(rssiDeviceLocator);
-        //return heatMapRSSIDeviceLocator.getWeightedHeatMap();
-        return null;
-//
-//
-//        ArrayList<WeightedLatLng> list = new ArrayList<>();
-//        String js ="[{\"lat\":-37.1886,\"lng\":145.708,\"wgt\":20},{\"lat\":-37.8361,\"lng\":144.845,\"wgt\":25},{\"lat\":-38.4034,\"lng\":144.192,\"wgt\":2},{\"lat\":-38.7597,\"lng\":143.67,\"wgt\":2},{\"lat\":-36.9672,\"lng\":141.083,\"wgt\":57}]";
-//
-//        /*InputStream inputStream = getResources().openRawResource(resource);
-//        String json = new Scanner(inputStream).useDelimiter("\\A").next();*/
-//        JSONArray array = new JSONArray(js);
-//        for (int i = 0; i < array.length(); i++) {
-//            JSONObject object = array.getJSONObject(i);
-//            double lat = object.getDouble("lat");
-//            double lng = object.getDouble("lng");
-//            int intensity = object.getInt("wgt");
-//            list.add(new WeightedLatLng(new LatLng(lat, lng), intensity));
-//        }
-//        System.out.println("Got coordinates " + js);
-//        return list;
-    }
-
-    // Declaring it
-
-
     public LatLng setCurrentLocation(double lan, double lon){
         return setCurrentLocation(new LatLng(lan, lon));
     }
 
-    public boolean hasLocation(){
-        return marker != null;
-    }
-
     public LatLng setCurrentLocation(LatLng location){
-        if(marker == null)
+        if(marker == null) {
             marker = mMap.addMarker(new MarkerOptions().position(location).title("Marker in..."));
-        else
+            lookAt(location);
+        }else
             marker.setPosition(location);
         return location;
     }
 
-    public void lookAt(LatLng location){
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+    public void lookAt(){
+        if(marker != null)
+           lookAt(marker.getPosition());
+    }
+
+    public void lookAt(final LatLng location){
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, new GoogleMap.CancelableCallback() {
+            @Override
+            public void onFinish() {
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        });
+
     }
 
     Observer<List<DeviceIoT>> o = new Observer<List<DeviceIoT>>() {
         @Override
         public void onChanged(List<DeviceIoT> deviceIoTS) {
             Log.d("LiveData", "Updated devices..");
-            updateHeatMap(deviceIoTS);
+            updateTrackedDevice(deviceIoTS);
+            refreshHeatMap();
         }
     };
+
+    void refreshHeatMap(){
+        if(trackedDevice != null){
+            CoordinatorIoT coordinatorIoT = ((App) getApplicationContext()).getRssiDeviceLocator().getCoordinatorIoT();
+            // Get single device
+            List<CoordinatorIoT.DeviceLocation> lastLocations = coordinatorIoT.getTrackedDevice(this.trackedDevice);
+            updateHeatMap(lastLocations != null ? lastLocations : new ArrayList<CoordinatorIoT.DeviceLocation>());
+        }
+    }
 
     Observer<LatLng> o2 = new Observer<LatLng>() {
         @Override
         public void onChanged(LatLng lastLocation) {
             Log.d("LiveData", "Updated lastLocation..");
-            if(lastLocation != null && mMap != null){
+            if(lastLocation != null && mMap != null) {
                 setCurrentLocation(lastLocation);
-                if(!hasLocation())
-                    lookAt(lastLocation);
+                isLocationUpdated = true;
             }
         }
     };

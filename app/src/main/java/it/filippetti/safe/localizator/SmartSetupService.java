@@ -12,10 +12,8 @@ import android.os.Parcelable;
 import android.os.ResultReceiver;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import java.util.Date;
 
-import it.filippetti.safe.localizator.locator.LocationReceiver;
 
 public class SmartSetupService extends Service {
 
@@ -33,7 +31,7 @@ public class SmartSetupService extends Service {
     public void onCreate() {
         Log.d("SmartSetupService", "onCreate");
         //localBroadcast = LocalBroadcastManager.getInstance(this);
-        //startAcquiringLocation();
+        startAcquiringLocation();
     }
 
     @Override
@@ -41,7 +39,7 @@ public class SmartSetupService extends Service {
         System.out.println("ionStartCommand SmartSetup");
         if(intent != null){
             locationReceiver  = intent.getParcelableExtra("location_receiver");
-            startAcquiringLocation();
+            //startAcquiringLocation();
         }
          return super.onStartCommand(intent, flags, startId);
 
@@ -56,9 +54,11 @@ public class SmartSetupService extends Service {
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, locationListener);  //requestLocationUpdates(0, 5, criteria, pi);
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, locationListener);  //requestLocationUpdates(0, 5, criteria, pi);
+            ((App)getApplicationContext()).updateLocalizationStatus("Localized listener started at " + new Date().toString());
         } catch (SecurityException ignored) {
             System.err.println("Error loading location info handler");
             //sendMessage("Cannot acquire location", null);
+            ((App)getApplicationContext()).updateLocalizationStatus("Localization error: " + ignored.getMessage());
         }
     }
 
@@ -86,6 +86,7 @@ public class SmartSetupService extends Service {
     }
 
     public void updateLocation(Location location){
+        ((App)getApplicationContext()).updateLocalizationStatus("Localized at " + new Date().toString());
         if(location != null && locationReceiver != null) {
             Bundle bundle = new Bundle();
             bundle.putParcelable("location", location);

@@ -6,6 +6,7 @@ import com.google.maps.android.heatmaps.WeightedLatLng;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.filippetti.safe.localizator.model.CoordinatorIoT;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 
 public class HeatMapRSSIDeviceLocatorImpl {
@@ -31,12 +32,23 @@ public class HeatMapRSSIDeviceLocatorImpl {
         return heatMapData;
     }*/
 
-    public static ArrayList<WeightedLatLng> getWeightedHeatMap(List<DeviceIoT> deviceIoTList){
+    public static ArrayList<WeightedLatLng> getWeightedHeatMapFromDevices(List<DeviceIoT> deviceIoTList){
         ArrayList<WeightedLatLng> list = new ArrayList<>();
         for (DeviceIoT deviceIoT : deviceIoTList) {
             list.add(new WeightedLatLng(new LatLng(
-                    deviceIoT.getLatitude(),
-                    deviceIoT.getLongitude()),
+                    deviceIoT.getLocation().getLatitude(),
+                    deviceIoT.getLocation().getLongitude()),
+                    Math.round(Math.abs(deviceIoT.getPower()))));
+        }
+        return list;
+    }
+
+    public static ArrayList<WeightedLatLng> getWeightedHeatMap(List<CoordinatorIoT.DeviceLocation> deviceIoTList){
+        ArrayList<WeightedLatLng> list = new ArrayList<>();
+        for (CoordinatorIoT.DeviceLocation deviceIoT : deviceIoTList) {
+            list.add(new WeightedLatLng(new LatLng(
+                    deviceIoT.getLocation().getLatitude(),
+                    deviceIoT.getLocation().getLongitude()),
                     Math.round(Math.abs(deviceIoT.getPower()))));
         }
         return list;

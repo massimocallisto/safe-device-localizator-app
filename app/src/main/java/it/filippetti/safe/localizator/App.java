@@ -29,6 +29,7 @@ public class App extends Application {
     private MutableLiveData<List<DeviceIoT>> deviceIoT = new MutableLiveData<>();
     private MutableLiveData<LatLng> lastLocation = new MutableLiveData<>();
     private MutableLiveData<String> mqttStatus = new MutableLiveData<>();
+    private MutableLiveData<String> localizationStatus = new MutableLiveData<>();
 
 
     String mqttserverUri = "tcp://localhost:1883";
@@ -41,7 +42,6 @@ public class App extends Application {
     public MutableLiveData<List<DeviceIoT>> getDeviceIoT() {
         return deviceIoT;
     }
-
     public void updateDeviceIoT(List<DeviceIoT> deviceList){
         deviceIoT.postValue(deviceList);
     }
@@ -49,16 +49,22 @@ public class App extends Application {
     public MutableLiveData<LatLng> getLastLocation() {
         return lastLocation;
     }
-
     public void updateLocation(LatLng latLng){
         lastLocation.postValue(latLng);
     }
+
     public MutableLiveData<String> getMQTTStatus() {
         return mqttStatus;
     }
-
     public void updateMqttStatus(String value){
         mqttStatus.postValue(value);
+    }
+
+    public MutableLiveData<String> getLocalizationStatus() {
+        return localizationStatus;
+    }
+    public void updateLocalizationStatus(String value){
+        localizationStatus.postValue(value);
     }
 
     SharedPreferences sharedPref;

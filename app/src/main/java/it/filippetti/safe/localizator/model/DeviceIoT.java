@@ -1,8 +1,12 @@
 package it.filippetti.safe.localizator.model;
 
+import android.location.Location;
+
 import androidx.annotation.NonNull;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 //import it.smartspace.jz.communication.interfaces.InductiveCommunication;
 
@@ -19,6 +23,26 @@ public class DeviceIoT implements Serializable {
     private byte status;
     private Double latitude, longitude;
     private Double altitude;
+    private Location location;
+
+    public class LastLocation{
+        private Double latitude, longitude;
+        private double power;
+
+        public LastLocation(Double latitude, Double longitude, double power) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+            this.power = power;
+        }
+    }
+
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location location) {
+        this.location = location;
+    }
 
     //    public Device(){
 //        short address = (short)((value >> 16) & 0xFFFF);
@@ -27,11 +51,13 @@ public class DeviceIoT implements Serializable {
 //    }
 //
     public DeviceIoT(short address) {
+        super();
         this.address = address;
         name = String.format("0x%04X", address);
     }
 
-    public DeviceIoT(){}
+    public DeviceIoT(){
+    }
 
     public void setName(String name) {
         this.name = name;
