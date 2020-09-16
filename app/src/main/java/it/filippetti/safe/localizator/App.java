@@ -26,6 +26,7 @@ public class App extends Application {
     private boolean commandIsRunning;
     private MqttHelper mqttHelper;
     private RSSIDeviceLocator rssiDeviceLocator;
+    private MutableLiveData<DeviceIoT> lastDeviceIoT = new MutableLiveData<>();
     private MutableLiveData<List<DeviceIoT>> deviceIoT = new MutableLiveData<>();
     private MutableLiveData<LatLng> lastLocation = new MutableLiveData<>();
     private MutableLiveData<String> mqttStatus = new MutableLiveData<>();
@@ -44,6 +45,13 @@ public class App extends Application {
     }
     public void updateDeviceIoT(List<DeviceIoT> deviceList){
         deviceIoT.postValue(deviceList);
+    }
+
+    public MutableLiveData<DeviceIoT> getLastDeviceIoT() {
+        return lastDeviceIoT;
+    }
+    public void updateLastDeviceIoT(DeviceIoT deviceIoT){
+        lastDeviceIoT.postValue(deviceIoT);
     }
 
     public MutableLiveData<LatLng> getLastLocation() {

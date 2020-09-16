@@ -3,6 +3,8 @@ package it.filippetti.safe.localizator.model;
 import android.location.Location;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,10 @@ public class CoordinatorIoT extends DeviceIoT {
         public Location getLocation() {
             return location;
         }
+    }
+
+    public List<String> getTrackedDeviceNames(){
+        return new ArrayList<>(locationHistory.keySet());
     }
 
     private Map<String, List<DeviceLocation>> locationHistory;

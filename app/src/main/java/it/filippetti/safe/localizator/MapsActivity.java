@@ -24,11 +24,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.TileOverlay;
 import com.google.android.gms.maps.model.TileOverlayOptions;
+import com.google.maps.android.heatmaps.Gradient;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import com.google.maps.android.heatmaps.WeightedLatLng;
 
@@ -121,16 +124,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         deviceListAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, deviceList);
         spinner.setAdapter(deviceListAdapter);
         spinner.setOnItemSelectedListener(this);
+        updateTrackedDevice();
+
     }
 
-    void updateTrackedDevice(List<DeviceIoT> deviceIoTList){
+    void updateTrackedDevice(){
         deviceList.clear();
+        List<String> names = ((App) getApplicationContext()).getRssiDeviceLocator().getCoordinatorIoT().getTrackedDeviceNames();
         deviceList.add("-----------");
-        for(DeviceIoT d : deviceIoTList) {
-            deviceList.add(d.getName());
+        for(String d : names) {
+            deviceList.add(d);
         }
         deviceListAdapter.notifyDataSetChanged();
-        makeSelected();
+        //makeSelected();
     }
 
     void makeSelected(){
@@ -157,12 +163,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng location = setCurrentLocation(43, 13);
-        setCurrentLocation(location);
-        lookAt(location);
-
-        if(isLocationUpdated)
+        Location lastLocation = ((App) getApplicationContext()).getRssiDeviceLocator().getLastLocation();
+        if(lastLocation != null){
+            setCurrentLocation(lastLocation.getLatitude(), lastLocation.getLongitude());
             lookAt();
+        }
 
         ImageButton buttonLocate = findViewById(R.id.Button01);
         buttonLocate.setOnClickListener(new View.OnClickListener() {
@@ -190,6 +195,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mOverlay.remove();
             mOverlay.clearTileCache();
         }
+        for(Circle p : points){
+            p.remove();
+        }
+        points.clear();
     }
 
     private void updateHeatMap(List<CoordinatorIoT.DeviceLocation> trackedDevice) {
@@ -197,17 +206,69 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(trackedDevice == null || trackedDevice .isEmpty()){
             return;
         }
+        // Create the gradient.
+        int[] colors = {
+                Color.rgb(102, 225, 0), // green
+                Color.rgb(255, 0, 0)    // red
+        };
+
+        float[] startPoints = {
+              0.0f, 60.0f
+        };
+
+        Gradient gradient = new Gradient(colors, startPoints);
+
         try {
             ArrayList<WeightedLatLng> items = HeatMapRSSIDeviceLocatorImpl.getWeightedHeatMap(trackedDevice);
-            mProvider = new HeatmapTileProvider.Builder()
+            /*mProvider = new HeatmapTileProvider.Builder()
                     .weightedData(items)
-                    .build();
+                    .radius(50)
+                    .gradient(gradient)
+                    .build();*/
             // Add a tile overlay to the map, using the heat map tile provider.
-            mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+            //mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+            for(CoordinatorIoT.DeviceLocation d : trackedDevice){
+                points.add(drawCircle(
+                        new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
+                        new Double(d.getPower()/120).floatValue()
+                ));
+            }
         } catch (Exception e) {
             Toast.makeText(this, "Problem reading list of locations.", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
+    }
+
+    private float interpolate(float a, float b, float proportion) {
+        return (a + ((b - a) * proportion));
+    }
+
+    ArrayList<Circle> points = new ArrayList<>();
+
+    /** Returns an interpoloated color, between <code>a</code> and <code>b</code> */
+    private int interpolateColor(int a, int b, float proportion) {
+        float[] hsva = new float[3];
+        float[] hsvb = new float[3];
+        Color.colorToHSV(a, hsva);
+        Color.colorToHSV(b, hsvb);
+        for (int i = 0; i < 3; i++) {
+            hsvb[i] = interpolate(hsva[i], hsvb[i], proportion);
+        }
+        return Color.HSVToColor(hsvb);
+    }
+
+    private Circle drawCircle(LatLng point, float value){
+
+        // Instantiating CircleOptions to draw a circle around the marker
+        CircleOptions circleOptions = new CircleOptions()
+                .center(point)
+                .radius(10)
+                .strokeColor(Color.LTGRAY)
+                .fillColor(interpolateColor(Color.GREEN, Color.RED, value))
+                .strokeWidth(2);
+        // Adding the circle to the GoogleMap
+        Circle circle = mMap.addCircle(circleOptions);
+        return circle;
     }
 
     public LatLng setCurrentLocation(double lan, double lon){
@@ -243,15 +304,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    Observer<List<DeviceIoT>> o = new Observer<List<DeviceIoT>>() {
+    /*Observer<List<DeviceIoT>> o = new Observer<List<DeviceIoT>>() {
         @Override
         public void onChanged(List<DeviceIoT> deviceIoTS) {
             Log.d("LiveData", "Updated devices..");
             updateTrackedDevice(deviceIoTS);
             refreshHeatMap();
         }
+    };*/
+    Observer<DeviceIoT> _o = new Observer<DeviceIoT>() {
+        @Override
+        public void onChanged(DeviceIoT deviceIoT) {
+            Log.d("LiveData", "Updated device.. " + deviceIoT.getName());
+            updateTrackedDevice();
+            if(deviceIoT.getName().equals(trackedDevice)) {
+                refreshHeatMap();
+            }
+        }
     };
-
     void refreshHeatMap(){
         if(trackedDevice != null){
             CoordinatorIoT coordinatorIoT = ((App) getApplicationContext()).getRssiDeviceLocator().getCoordinatorIoT();
@@ -267,7 +337,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d("LiveData", "Updated lastLocation..");
             if(lastLocation != null && mMap != null) {
                 setCurrentLocation(lastLocation);
-                isLocationUpdated = true;
+
             }
         }
     };
@@ -275,8 +345,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onAttachFragment(@NonNull Fragment fragment) {
         super.onAttachFragment(fragment);
-        MutableLiveData<List<DeviceIoT>> liveDeviceIoT = ((App) getApplicationContext()).getDeviceIoT();
-        liveDeviceIoT.observe(this, o);
+        //MutableLiveData<List<DeviceIoT>> liveDeviceIoT = ((App) getApplicationContext()).getDeviceIoT();
+        MutableLiveData<DeviceIoT> liveDeviceIoT = ((App) getApplicationContext()).getLastDeviceIoT();
+        liveDeviceIoT.observe(this, _o);
 
         MutableLiveData<LatLng> lastLocation = ((App) getApplicationContext()).getLastLocation();
         lastLocation.observe(this, o2);

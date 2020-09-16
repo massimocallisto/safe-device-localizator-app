@@ -1,5 +1,7 @@
 package it.filippetti.safe.localizator.locator;
 
+import android.location.Location;
+
 import java.util.List;
 
 import it.filippetti.safe.localizator.model.CoordinatorIoT;
@@ -12,6 +14,7 @@ public interface RSSIDeviceLocator {
     void updateLocation(DeviceIoT deviceIoT, Double lon, Double lat);
     void sortByRSSI();
     CoordinatorIoT getCoordinatorIoT();
+    Location getLastLocation();
     void sortByRSSI(boolean asc);
     DeviceIoT getDeviceIoT(String name);
     List<DeviceIoT> getAllDeviceIoT();

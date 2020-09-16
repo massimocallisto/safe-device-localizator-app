@@ -27,15 +27,14 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
     private Application applicationContext;
     private CoordinatorIoT coordinatorIoT;
 
-//    public SmartSetupService getLocationProvider() {
-//        return locationProvider;
-//    }
-//
-//    public void setLocationProvider(SmartSetupService locationProvider) {
-//        this.locationProvider = locationProvider;
-//    }
+    @Override
+    public Location getLastLocation() {
+        return lastKnowLocation;
+    }
 
-    //private SmartSetupService locationProvider;
+    public void setLastKnowLocation(Location lastKnowLocation) {
+        this.lastKnowLocation = lastKnowLocation;
+    }
 
     public RSSIDeviceLocatorImpl(Application application) {
         this.applicationContext = application;
@@ -138,7 +137,8 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
                 addOrUpdateDevice(deviceIoT);
                 coordinatorIoT.trackDeviceLocation(deviceIoT);
                 // notify
-                ((App)this.applicationContext).updateDeviceIoT(getAllDeviceIoT());
+                //((App)this.applicationContext).updateDeviceIoT(getAllDeviceIoT());
+                ((App)this.applicationContext).updateLastDeviceIoT(deviceIoT);
             }else{
                 Log.w("device_census", !hasPower ?
                         "Cannot commit device with " + "null RSSI" :

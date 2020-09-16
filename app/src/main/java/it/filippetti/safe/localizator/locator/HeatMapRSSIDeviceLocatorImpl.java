@@ -46,10 +46,13 @@ public class HeatMapRSSIDeviceLocatorImpl {
     public static ArrayList<WeightedLatLng> getWeightedHeatMap(List<CoordinatorIoT.DeviceLocation> deviceIoTList){
         ArrayList<WeightedLatLng> list = new ArrayList<>();
         for (CoordinatorIoT.DeviceLocation deviceIoT : deviceIoTList) {
+            double power = Math.abs(deviceIoT.getPower());
+            power /= 120;
+
             list.add(new WeightedLatLng(new LatLng(
                     deviceIoT.getLocation().getLatitude(),
                     deviceIoT.getLocation().getLongitude()),
-                    Math.round(Math.abs(deviceIoT.getPower()))));
+                    power));
         }
         return list;
     }

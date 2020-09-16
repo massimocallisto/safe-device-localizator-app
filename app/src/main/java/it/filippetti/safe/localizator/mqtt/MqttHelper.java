@@ -97,6 +97,7 @@ public class MqttHelper {
     private void subscribeToTopic() {
         String subscriptionTopic = this.context.getMqttsubscriptionTopic();
         try {
+            System.out.println("Subscribing  to " + subscriptionTopic);
             mqttAndroidClient.subscribe(subscriptionTopic, 0, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
