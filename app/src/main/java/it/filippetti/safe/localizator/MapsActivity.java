@@ -41,8 +41,10 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 import it.filippetti.safe.localizator.locator.HeatMapRSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.locator.RSSIDeviceLocator;
@@ -51,7 +53,7 @@ import it.filippetti.safe.localizator.model.CoordinatorIoT;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 import it.filippetti.safe.localizator.mqtt.MQTTService;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, AdapterView.OnItemSelectedListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     /**
      * Alternative radius for convolution
@@ -92,19 +94,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ArrayList<String> deviceList;
     private ArrayAdapter<String> deviceListAdapter;
     boolean isLocationUpdated = false;
+    Set<String> devicesMap = new HashSet<>();
 
-    @Override
+    /*@Override
     public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
         String s = (String)this.spinner.getItemAtPosition(position);
         System.out.println("Selected device list. Value; " + s);
         this.trackedDevice = s;
         refreshHeatMap();
-    }
+    }*/
 
-    @Override
+   /* @Override
     public void onNothingSelected(AdapterView<?> parent) {
         // TODO Auto-generated method stub
-    }
+    }*/
 
 
     @Override
@@ -123,31 +126,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         deviceListAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, deviceList);
         spinner.setAdapter(deviceListAdapter);
-        spinner.setOnItemSelectedListener(this);
+        spinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    public void onItemSelected(
+                            AdapterView<?> parent, View view, int position, long id) {
+                        //showToast("Spinner1: position=" + position + " id=" + id);
+                        String s = (String)spinner.getItemAtPosition(position);
+                        System.out.println("Selected device list. Value; " + s);
+                        trackedDevice = s;
+                        refreshHeatMap();
+                    }
+
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        //showToast("Spinner1: unselected");
+                    }
+                });
+        //spinner.setOnItemSelectedListener(this);
         updateTrackedDevice();
 
     }
 
     void updateTrackedDevice(){
+        String currentDevice = trackedDevice;
         deviceList.clear();
         List<String> names = ((App) getApplicationContext()).getRssiDeviceLocator().getCoordinatorIoT().getTrackedDeviceNames();
-        deviceList.add("-----------");
+        deviceList.add("Select a device..");
         for(String d : names) {
             deviceList.add(d);
         }
         deviceListAdapter.notifyDataSetChanged();
-        //makeSelected();
+        //makeSelected(currentDevice);
+        spinner.setSelection(deviceListAdapter.getPosition(currentDevice));
     }
 
-    void makeSelected(){
-        if(trackedDevice != null){
+    /*void makeSelected(String currentDevice){
+        if(currentDevice != null){
             for(int i = 0; i < deviceList.size(); i++){
-                if(deviceList.get(i).equals(trackedDevice))
+                if(deviceList.get(i).equals(currentDevice))
                     spinner.setSelection(i);
                 return;
             }
         }
-    }
+    }*/
 
     /**
      * Manipulates the map once available.
@@ -320,6 +340,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(deviceIoT.getName().equals(trackedDevice)) {
                 refreshHeatMap();
             }
+
         }
     };
     void refreshHeatMap(){
