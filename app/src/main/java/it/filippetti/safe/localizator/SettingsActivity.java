@@ -61,6 +61,10 @@ public class SettingsActivity extends AppCompatActivity implements
         if(mqtttopicurl != null){
             _setText(mqtttopicurl, ((App)getApplicationContext()).getMqttsubscriptionTopic());
         }
+        View sizeheatmap = findViewById(R.id.sizeheatmap);
+        if(sizeheatmap != null){
+            _setText(sizeheatmap, ((App)getApplicationContext()).getSizeHeatmap());
+        }
 
         View mqttSave = findViewById(R.id.mqttsave);
         if(mqttSave != null){
@@ -70,6 +74,7 @@ public class SettingsActivity extends AppCompatActivity implements
                     app.setMqttserverUri(((TextInputEditText)findViewById(R.id.mqttbroketurl)).getText().toString());
                     app.setMqttclientId(((TextInputEditText)findViewById(R.id.mqttclientid)).getText().toString());
                     app.setMqttsubscriptionTopic(((TextInputEditText)findViewById(R.id.mqtttopicurl)).getText().toString());
+                    app.setSizeHeatmap(((TextInputEditText)findViewById(R.id.sizeheatmap)).getText().toString());
                     System.out.println("Saved..");
                 }
             });

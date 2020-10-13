@@ -78,4 +78,8 @@ public class CoordinatorIoT extends DeviceIoT {
         return null;
     }
 
+    public void clearData(){
+        this.locationHistory.clear();
+    }
+
 }

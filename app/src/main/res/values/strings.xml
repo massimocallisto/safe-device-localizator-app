@@ -28,4 +28,5 @@
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="title_activity_settings2">SettingsActivity2</string>
     <string name="title_activity_maps2">Map</string>
+    <string name="title_activity_settings_map">SettingsMapActivity</string>
 </resources>

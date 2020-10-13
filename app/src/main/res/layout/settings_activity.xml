@@ -53,6 +53,20 @@
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
 
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/sizeHeatmaplayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/sizeheatmap"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Heatmap size"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
             <Button
                 android:id="@+id/mqttsave"
                 android:layout_width="match_parent"
@@ -61,5 +75,10 @@
 
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/settings2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
 </LinearLayout>

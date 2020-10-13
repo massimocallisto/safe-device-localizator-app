@@ -82,6 +82,18 @@ public class FirstFragment extends Fragment {
         setMqttStatusUpdate();
         setLocalizationStatusUpdate();
 
+        String mqttServer = ((App) getActivity().getApplication()).getMqttserverUri();
+        if(mqttServer != null){
+            View viewById = view.findViewById(R.id.mqtttxtstatus);
+            if(viewById != null){
+                ((TextView)viewById).setText("Click to start listening on " + mqttServer);
+            }
+        }
+        View viewById = view.findViewById(R.id.textViewGPS);
+        if(viewById != null){
+            ((TextView)viewById).setText("Click to start acquiring GPS location");
+        }
+
 
         Button buttonMQTT = view.findViewById(R.id.mqttbtx1);
         buttonMQTT.setOnClickListener(new View.OnClickListener() {

@@ -39,6 +39,7 @@ public class App extends Application {
     // Not used
     String mqttusername = "xxxxxxx";
     String mqttpassword = "yyyyyyy";
+    String sizeheatmap = "10";
 
     public MutableLiveData<List<DeviceIoT>> getDeviceIoT() {
         return deviceIoT;
@@ -84,6 +85,7 @@ public class App extends Application {
         mqttserverUri = sharedPref.getString("mqttserverUri", "tcp://test.mosquitto.org:1883");
         mqttclientId = sharedPref.getString("mqttclientId", "ExampleAndroidClientSAFE");
         mqttsubscriptionTopic = sharedPref.getString("mqttsubscriptionTopic", "/safe.it/#");
+        sizeheatmap = sharedPref.getString("sizeheatmap", "10");
     }
 
     public MqttHelper getMQTTHelper() {
@@ -110,6 +112,7 @@ public class App extends Application {
         editor.putString("mqttserverUri", this.mqttserverUri);
         editor.putString("mqttclientId", this.mqttclientId);
         editor.putString("mqttsubscriptionTopic", this.mqttsubscriptionTopic);
+        editor.putString("sizeheatmap", this.sizeheatmap);
         editor.commit();
     }
 
@@ -150,5 +153,14 @@ public class App extends Application {
 
     public void setMqttpassword(String mqttpassword) {
         this.mqttpassword = mqttpassword;
+    }
+
+    public String getSizeHeatmap() {
+        return sizeheatmap;
+    }
+
+    public void setSizeHeatmap(String sizeheatmap) {
+        this.sizeheatmap = sizeheatmap;
+
     }
 }

@@ -1,6 +1,7 @@
 package it.filippetti.safe.localizator;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.MutableLiveData;
@@ -18,6 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -58,18 +60,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * Alternative radius for convolution
      */
-    private static final int ALT_HEATMAP_RADIUS = 10;
+    //private static final int ALT_HEATMAP_RADIUS = 10;
 
     /**
      * Alternative opacity of heatmap overlay
      */
     private static final double ALT_HEATMAP_OPACITY = 0.4;
+    private static final float DEFAULT_ZOOM_LEVEL = 15;
 
     /**
      * Alternative heatmap gradient (blue -> red)
      * Copied from Javascript version
      */
-    private static final int[] ALT_HEATMAP_GRADIENT_COLORS = {
+    /*private static final int[] ALT_HEATMAP_GRADIENT_COLORS = {
             Color.argb(0, 0, 255, 255),// transparent
             Color.argb(255 / 3 * 2, 0, 255, 255),
             Color.rgb(0, 191, 255),
@@ -82,7 +85,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     public static final Gradient ALT_HEATMAP_GRADIENT = new Gradient(ALT_HEATMAP_GRADIENT_COLORS,
-            ALT_HEATMAP_GRADIENT_START_POINTS);
+            ALT_HEATMAP_GRADIENT_START_POINTS);*/
 
     private GoogleMap mMap;
     private HeatmapTileProvider mProvider;
@@ -116,6 +119,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         System.out.println("MNaps creation start...");
 
         setContentView(R.layout.activity_maps);
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -134,6 +139,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         String s = (String)spinner.getItemAtPosition(position);
                         System.out.println("Selected device list. Value; " + s);
                         trackedDevice = s;
+                        flyToDevice(trackedDevice);
                         refreshHeatMap();
                     }
 
@@ -144,16 +150,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         //spinner.setOnItemSelectedListener(this);
         updateTrackedDevice();
 
+        /*Button btnSetting = (Button)findViewById(R.id.btn_setting_map);
+        btnSetting.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), MapsViewSettings.class);
+                startActivity(intent);
+            }
+        });*/
+        ImageButton btnClear = (ImageButton)findViewById(R.id.map_clean);
+        btnClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RSSIDeviceLocator rssiDeviceLocator = ((App) getApplicationContext()).getRssiDeviceLocator();
+                if(rssiDeviceLocator != null){
+                    CoordinatorIoT coordinatorIoT = rssiDeviceLocator.getCoordinatorIoT();
+                    if(coordinatorIoT != null) {
+                        coordinatorIoT.clearData();
+                        trackedDevice = null;
+                        updateTrackedDevice();
+                        refreshHeatMap();
+
+                    }
+                }
+            }
+        });
+        ImageButton btnRefresh = (ImageButton)findViewById(R.id.map_refresh);
+        btnRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                refreshHeatMap();
+                lookAt();
+            }
+        });
+
     }
 
     void updateTrackedDevice(){
         String currentDevice = trackedDevice;
         deviceList.clear();
-        List<String> names = ((App) getApplicationContext()).getRssiDeviceLocator().getCoordinatorIoT().getTrackedDeviceNames();
-        deviceList.add("Select a device..");
-        for(String d : names) {
-            deviceList.add(d);
-        }
+        RSSIDeviceLocator rssiDeviceLocator = ((App) getApplicationContext()).getRssiDeviceLocator();
+        if(rssiDeviceLocator != null){
+            List<String> names = rssiDeviceLocator.getCoordinatorIoT().getTrackedDeviceNames();
+            deviceList.add("Select a device..");
+            for(String d : names) {
+                deviceList.add(d);
+            }
+        }else
+            deviceList.add("Listener device not active!");
         deviceListAdapter.notifyDataSetChanged();
         //makeSelected(currentDevice);
         spinner.setSelection(deviceListAdapter.getPosition(currentDevice));
@@ -183,10 +227,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        Location lastLocation = ((App) getApplicationContext()).getRssiDeviceLocator().getLastLocation();
-        if(lastLocation != null){
-            setCurrentLocation(lastLocation.getLatitude(), lastLocation.getLongitude());
-            lookAt();
+        RSSIDeviceLocator rssiDeviceLocator = ((App) getApplicationContext()).getRssiDeviceLocator();
+        if(rssiDeviceLocator != null) {
+            Location lastLocation = rssiDeviceLocator.getLastLocation();
+            if (lastLocation != null) {
+                setCurrentLocation(lastLocation.getLatitude(), lastLocation.getLongitude());
+                lookAt();
+            }
         }
 
         ImageButton buttonLocate = findViewById(R.id.Button01);
@@ -247,10 +294,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .build();*/
             // Add a tile overlay to the map, using the heat map tile provider.
             //mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+            double sizeCircle = Double.parseDouble( ((App) getApplicationContext()).getSizeHeatmap());
             for(CoordinatorIoT.DeviceLocation d : trackedDevice){
                 points.add(drawCircle(
                         new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
-                        new Double(d.getPower()/120).floatValue()
+                        new Double(d.getPower()/120).floatValue(),
+                        sizeCircle
                 ));
             }
         } catch (Exception e) {
@@ -277,12 +326,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return Color.HSVToColor(hsvb);
     }
 
-    private Circle drawCircle(LatLng point, float value){
+    private Circle drawCircle(LatLng point, float value, double sizeCircle ){
 
         // Instantiating CircleOptions to draw a circle around the marker
         CircleOptions circleOptions = new CircleOptions()
                 .center(point)
-                .radius(10)
+                .radius(sizeCircle) //.radius(10)
                 .strokeColor(Color.LTGRAY)
                 .fillColor(interpolateColor(Color.GREEN, Color.RED, value))
                 .strokeWidth(2);
@@ -298,19 +347,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public LatLng setCurrentLocation(LatLng location){
         if(marker == null) {
             marker = mMap.addMarker(new MarkerOptions().position(location).title("Marker in..."));
-            lookAt(location);
+            lookAt(location, DEFAULT_ZOOM_LEVEL);
         }else
             marker.setPosition(location);
         return location;
     }
 
     public void lookAt(){
+        lookAt(DEFAULT_ZOOM_LEVEL);
+    }
+    public void lookAt(float zoomLevel){
         if(marker != null)
-           lookAt(marker.getPosition());
+           lookAt(marker.getPosition(), zoomLevel);
     }
 
-    public void lookAt(final LatLng location){
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, new GoogleMap.CancelableCallback() {
+    public void lookAt(final LatLng location, float zoomLevel){
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(zoomLevel), 2000, new GoogleMap.CancelableCallback() {
             @Override
             public void onFinish() {
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
@@ -344,11 +396,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
     void refreshHeatMap(){
-        if(trackedDevice != null){
-            CoordinatorIoT coordinatorIoT = ((App) getApplicationContext()).getRssiDeviceLocator().getCoordinatorIoT();
+        RSSIDeviceLocator rssiDeviceLocator = ((App) getApplicationContext()).getRssiDeviceLocator();
+        if(trackedDevice != null && rssiDeviceLocator != null){
+            CoordinatorIoT coordinatorIoT = rssiDeviceLocator.getCoordinatorIoT();
             // Get single device
             List<CoordinatorIoT.DeviceLocation> lastLocations = coordinatorIoT.getTrackedDevice(this.trackedDevice);
             updateHeatMap(lastLocations != null ? lastLocations : new ArrayList<CoordinatorIoT.DeviceLocation>());
+        }
+    }
+
+    void flyToDevice(String trackedDevice){
+        RSSIDeviceLocator rssiDeviceLocator = ((App) getApplicationContext()).getRssiDeviceLocator();
+        if(trackedDevice != null && rssiDeviceLocator != null){
+            CoordinatorIoT coordinatorIoT = rssiDeviceLocator.getCoordinatorIoT();
+            // Get single device
+            List<CoordinatorIoT.DeviceLocation> lastLocations = coordinatorIoT.getTrackedDevice(trackedDevice);
+            if(lastLocations != null && lastLocations.size() > 0){
+                CoordinatorIoT.DeviceLocation deviceLocation = lastLocations.get(lastLocations.size()  - 1); // get LAST
+                Location location = deviceLocation.getLocation();
+                lookAt(new LatLng(location.getLatitude(), location.getLongitude()), 25);
+            }
         }
     }
 
