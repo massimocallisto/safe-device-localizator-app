@@ -64,6 +64,15 @@
                 android:cropToPadding="false"
                 android:paddingLeft="10dp"
                 android:scaleType="fitXY"></ImageButton>
+
+            <ImageButton
+                android:id="@+id/map_heatmap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/ic_menu_mapmode"
+                android:cropToPadding="false"
+                android:paddingLeft="10dp"
+                android:scaleType="fitXY"></ImageButton>
         </LinearLayout>
 
     </com.google.android.material.appbar.AppBarLayout>

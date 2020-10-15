@@ -92,6 +92,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private TileOverlay mOverlay;
     private String trackedDevice = "";
     private Spinner spinner;
+    private boolean useHeatmap = false;
 
     Marker marker;
     private ArrayList<String> deviceList;
@@ -184,6 +185,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        ImageButton btnHeatmap  = (ImageButton)findViewById(R.id.map_heatmap);
+        btnRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                useHeatmap = !useHeatmap;
+                refreshHeatMap();
+            }
+        });
+
     }
 
     void updateTrackedDevice(){
@@ -273,35 +283,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(trackedDevice == null || trackedDevice .isEmpty()){
             return;
         }
-        // Create the gradient.
-        int[] colors = {
-                Color.rgb(102, 225, 0), // green
-                Color.rgb(255, 0, 0)    // red
-        };
 
-        float[] startPoints = {
-              0.0f, 60.0f
-        };
-
-        Gradient gradient = new Gradient(colors, startPoints);
 
         try {
-            ArrayList<WeightedLatLng> items = HeatMapRSSIDeviceLocatorImpl.getWeightedHeatMap(trackedDevice);
-            /*mProvider = new HeatmapTileProvider.Builder()
-                    .weightedData(items)
-                    .radius(50)
-                    .gradient(gradient)
-                    .build();*/
-            // Add a tile overlay to the map, using the heat map tile provider.
-            //mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
-            double sizeCircle = Double.parseDouble( ((App) getApplicationContext()).getSizeHeatmap());
-            for(CoordinatorIoT.DeviceLocation d : trackedDevice){
-                points.add(drawCircle(
-                        new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
-                        new Double(d.getPower()/120).floatValue(),
-                        sizeCircle
-                ));
+            if(useHeatmap){
+                // Create the gradient.
+                int[] colors = {
+                        Color.rgb(102, 225, 0), // green
+                        Color.rgb(255, 0, 0)    // red
+                };
+
+                float[] startPoints = {
+                        0.2f, 1f
+                };
+
+                Gradient gradient = new Gradient(colors, startPoints);
+                ArrayList<WeightedLatLng> items = HeatMapRSSIDeviceLocatorImpl.getWeightedHeatMap(trackedDevice);
+                mProvider = new HeatmapTileProvider.Builder()
+                        .weightedData(items)
+                        .radius(50)
+                        .gradient(gradient)
+                        .build();
+                // Add a tile overlay to the map, using the heat map tile provider.
+                mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+            }else{
+                double sizeCircle = Double.parseDouble( ((App) getApplicationContext()).getSizeHeatmap());
+                for(CoordinatorIoT.DeviceLocation d : trackedDevice){
+                    points.add(drawCircle(
+                            new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
+                            new Double(d.getPower()/120).floatValue(),
+                            sizeCircle
+                    ));
+                }
             }
+
+
         } catch (Exception e) {
             Toast.makeText(this, "Problem reading list of locations.", Toast.LENGTH_LONG).show();
             e.printStackTrace();
