@@ -186,7 +186,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         ImageButton btnHeatmap  = (ImageButton)findViewById(R.id.map_heatmap);
-        btnRefresh.setOnClickListener(new View.OnClickListener() {
+        btnHeatmap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 useHeatmap = !useHeatmap;
@@ -290,11 +290,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Create the gradient.
                 int[] colors = {
                         Color.rgb(102, 225, 0), // green
-                        Color.rgb(255, 0, 0)    // red
+                        Color.rgb(255, 247, 0),    // yellow
+                        Color.rgb(255, 0, 0)   // red
                 };
 
                 float[] startPoints = {
-                        0.2f, 1f
+                        0.1f, 0.4f, 07f
                 };
 
                 Gradient gradient = new Gradient(colors, startPoints);
@@ -307,13 +308,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Add a tile overlay to the map, using the heat map tile provider.
                 mOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
             }else{
-                double sizeCircle = Double.parseDouble( ((App) getApplicationContext()).getSizeHeatmap());
-                for(CoordinatorIoT.DeviceLocation d : trackedDevice){
-                    points.add(drawCircle(
-                            new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
-                            new Double(d.getPower()/120).floatValue(),
-                            sizeCircle
-                    ));
+                /*{
+                    double sizeCircle = Double.parseDouble( ((App) getApplicationContext()).getSizeHeatmap());
+                    for(CoordinatorIoT.DeviceLocation d : trackedDevice){
+                        points.add(drawCircle(
+                                new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
+                                new Double(d.getPower()/120).floatValue(),
+                                sizeCircle
+                        ));
+                    }
+                }*/
+                {
+                    {
+                        double sizeCircle = Double.parseDouble( ((App) getApplicationContext()).getSizeHeatmap());
+                        for(CoordinatorIoT.DeviceLocation d : trackedDevice){
+                            float percentage = 0.0f;//new Double(d.getPower()/120).floatValue();
+                            float power = new Double(-1 * (d.getPower()-120)).floatValue();
+                            if(power< 40){
+                                percentage = 1;
+                            }else if(power > 70){
+                                percentage = 0.1f;
+                            }else{
+                                percentage =  new Double(0.99 -(power-40)/30).floatValue();
+                            }
+                            points.add(drawCircle(
+                                    new LatLng(d.getLocation().getLatitude(), d.getLocation().getLongitude()),
+                                    percentage,
+                                    sizeCircle
+                            ));
+                        }
+                    }
                 }
             }
 
