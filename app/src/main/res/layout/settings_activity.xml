@@ -73,6 +73,13 @@
                 android:layout_height="wrap_content"
                 android:text="Save" />
 
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="App version: v0.0.1" />
+
+
         </LinearLayout>
     </ScrollView>
 

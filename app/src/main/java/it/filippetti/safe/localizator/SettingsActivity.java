@@ -46,7 +46,7 @@ public class SettingsActivity extends AppCompatActivity implements
                 });
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
+           // actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
         View mqttbroketurl = findViewById(R.id.mqttbroketurl);
