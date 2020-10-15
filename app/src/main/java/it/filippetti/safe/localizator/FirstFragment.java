@@ -17,10 +17,19 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Date;
+
 import it.filippetti.safe.localizator.locator.RSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.mqtt.MQTTService;
+import it.filippetti.sp.android.driver.SPDriverService;
 
 public class FirstFragment extends Fragment {
+    private String TAG = "AAA_" + FirstFragment.class.getSimpleName();
+
     private static final String[] LOCATION_PERMS={
             Manifest.permission.ACCESS_FINE_LOCATION
     };
@@ -113,21 +122,6 @@ public class FirstFragment extends Fragment {
                     }
                 });
                 MQTTService.enqueueNewWork(app, deviceDataResultReceiver, MQTTService.START_MQTT);
-
-                /*// Start Location GPS
-                // requestPermissions(LOCATION_PERMS, 1337+3);
-                Intent startServiceIntent = new Intent(app, SmartSetupService.class);
-                ServiceResultReceiver locationDataResultReceiver = new ServiceResultReceiver(new Handler());
-                locationDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
-                    @Override
-                    public void onReceiveResult(int resultCode, Bundle resultData) {
-                        Location location = resultData.getParcelable("location");
-                        rssiDeviceLocator.onNewLocation(location);
-                    }
-                });
-                startServiceIntent.putExtra("location_receiver", locationDataResultReceiver);
-                getActivity().startService(startServiceIntent);*/
-
             }
         });
         Button btxlocalization = view.findViewById(R.id.btxlocalization);
@@ -154,15 +148,61 @@ public class FirstFragment extends Fragment {
             }
         });
 
-        /*view.findViewById(R.id.button_first).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
-            }
-        });*/
+        final View view2 = view;
+        Button btxUSB = view.findViewById(R.id.button_usb);
+        btxUSB.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Log.d(TAG, "service starting");
+                App app = (App)getActivity().getApplication();
+                initLocalizator(app);
+                final RSSIDeviceLocatorImpl rssiDeviceLocator = (RSSIDeviceLocatorImpl) app.getRssiDeviceLocator();
 
-       // final View _view = view;
+                ServiceResultReceiver deviceDataResultReceiver = new ServiceResultReceiver(new Handler());
+                deviceDataResultReceiver.setReceiver(new ServiceResultReceiver.Receiver() {
+                    @Override
+                    public void onReceiveResult(int resultCode, Bundle resultData) {
+                        // TODO
+                        /*String message = resultData.getString("message");
+                        String topic = resultData.getString("topic");
+                        rssiDeviceLocator.onNewMessage(topic, message);*/
+
+                        try {
+                            String address = resultData.getString("address", "unknown_address");
+                            long rssi = resultData.getLong("rssi",  Long.MIN_VALUE);
+                            JSONObject sn = new JSONObject();
+                            sn.put("ref", address);
+                            JSONArray r = new JSONArray();
+                            JSONObject rssiObj = new JSONObject();
+                            rssiObj.put("k", "rssi");
+                            rssiObj.put("v", rssi);
+                            r.put(rssiObj);
+                            sn.put("r", r);
+                            rssiDeviceLocator.onNewMessage("some/topic", sn.toString());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                        System.out.println("Got message from USB");
+                        String txt = "Last contact: " + new Date().toString();
+                        View viewById = view2.findViewById(R.id.label_usb);
+                        if(viewById != null){
+                            ((TextView)viewById).setText(txt);
+                        }
+                    }
+                });
+                SPDriverService.enqueueNewWork(app, deviceDataResultReceiver, SPDriverService.START_SERVICE);
+                String txt = "Waiting from USB...";
+                View viewById = view2.findViewById(R.id.label_usb);
+                if(viewById != null){
+                    ((TextView)viewById).setText(txt);
+                }
+            }
+        });
+
+
+
+
+        // final View _view = view;
         Button buttonOne = view.findViewById(R.id.viewmap);
         if(buttonOne != null)
             buttonOne.setOnClickListener(new View.OnClickListener() {

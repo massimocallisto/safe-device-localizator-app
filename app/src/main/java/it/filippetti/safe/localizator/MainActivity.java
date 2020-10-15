@@ -19,13 +19,21 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import it.filippetti.safe.localizator.locator.RSSIDeviceLocatorImpl;
 import it.filippetti.safe.localizator.mqtt.MQTTService;
 import it.filippetti.safe.localizator.mqtt.MqttHelper;
+import it.filippetti.sp.android.bus.io.EventBus;
+import it.filippetti.sp.android.bus.io.MessageConsumer;
 
 import static it.filippetti.safe.localizator.mqtt.MQTTService.SHOW_RESULT;
 
 public class MainActivity extends AppCompatActivity  implements ServiceResultReceiver.Receiver {
+
+    private EventBus eventBus = EventBus.eventBus();
+    private List<MessageConsumer> consumerCollection = new ArrayList<>();
 
     private ServiceResultReceiver mServiceResultReceiver;
     private TextView mTextView;
@@ -40,6 +48,7 @@ public class MainActivity extends AppCompatActivity  implements ServiceResultRec
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
 //        FloatingActionButton fab = findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
