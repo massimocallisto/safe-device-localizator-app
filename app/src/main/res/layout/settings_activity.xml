@@ -77,7 +77,7 @@
                 android:id="@+id/textView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="App version: v0.0.1" />
+                android:text="App version: v0.0.2" />
 
 
         </LinearLayout>
