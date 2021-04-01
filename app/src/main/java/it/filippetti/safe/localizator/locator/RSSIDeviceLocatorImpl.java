@@ -136,6 +136,14 @@ public class RSSIDeviceLocatorImpl implements RSSIDeviceLocator/*, ServiceResult
                 // Census
                 addOrUpdateDevice(deviceIoT);
                 coordinatorIoT.trackDeviceLocation(deviceIoT);
+                // Add record
+                ((App)this.applicationContext).getDataService().addRecord(
+                        deviceIoT.getName(),
+                        coordinatorIoT.getName(),
+                        power,
+                        deviceIoT.getLatitude(),
+                        deviceIoT.getLongitude()
+                );
                 // notify
                 //((App)this.applicationContext).updateDeviceIoT(getAllDeviceIoT());
                 ((App)this.applicationContext).updateLastDeviceIoT(deviceIoT);

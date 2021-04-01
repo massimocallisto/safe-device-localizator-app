@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.greenrobot.greendao' // apply plugin
 
 repositories {
     mavenCentral()
@@ -52,6 +53,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'com.github.kai-morich:usb-serial-for-android:1.7.0'
     implementation 'org.greenrobot:eventbus:3.1.1'
+    implementation 'org.greenrobot:greendao:3.3.0'
     implementation('org.jscience:jscience:4.3.1') {
         exclude group: "org.javolution"
     }

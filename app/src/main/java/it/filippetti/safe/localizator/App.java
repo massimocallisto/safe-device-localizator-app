@@ -8,10 +8,14 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.greenrobot.greendao.database.Database;
+
 import java.util.List;
 import java.util.UUID;
 
 import it.filippetti.safe.localizator.locator.RSSIDeviceLocator;
+import it.filippetti.safe.localizator.model.DaoMaster;
+import it.filippetti.safe.localizator.model.DaoSession;
 import it.filippetti.safe.localizator.model.DeviceIoT;
 import it.filippetti.safe.localizator.mqtt.MqttHelper;
 
@@ -31,7 +35,15 @@ public class App extends Application {
     private MutableLiveData<LatLng> lastLocation = new MutableLiveData<>();
     private MutableLiveData<String> mqttStatus = new MutableLiveData<>();
     private MutableLiveData<String> localizationStatus = new MutableLiveData<>();
+    private DaoSession daoSession;
+    private DataService dataService;
 
+    public DaoSession getDaoSession() {
+        return daoSession;
+    }
+    public DataService getDataService() {
+        return dataService;
+    }
 
     String mqttserverUri = "tcp://localhost:1883";
     String mqttclientId = "1";
@@ -86,6 +98,12 @@ public class App extends Application {
         mqttclientId = sharedPref.getString("mqttclientId", "ExampleAndroidClientSAFE");
         mqttsubscriptionTopic = sharedPref.getString("mqttsubscriptionTopic", "/safe.it/#");
         sizeheatmap = sharedPref.getString("sizeheatmap", "10");
+
+        // regular SQLite database
+        DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(this, "safe_localizator");
+        Database db = helper.getWritableDb();
+        daoSession = new DaoMaster(db).newSession();
+        dataService = new DataService(this);
     }
 
     public MqttHelper getMQTTHelper() {
